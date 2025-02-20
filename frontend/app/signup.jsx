@@ -1,110 +1,202 @@
-import { View, TouchableOpacity, Text, StyleSheet , Image, TextInput, Button} from 'react-native'
-import React from 'react';
-import { useState } from 'react';
-import loginImage from "@/assets/images/login-image.png";
+import { View, TouchableOpacity, Text, StyleSheet, Image, TextInput } from 'react-native';
+import React, { useState } from 'react';
+import { Picker } from '@react-native-picker/picker';
+import signupImage from "@/assets/images/signup-image.png";
 import googleLogoImage from "@/assets/images/google-logo.png";
 import { useRouter } from 'expo-router';
+import { AntDesign } from '@expo/vector-icons'; 
 
-const app = () => {
-  const router=useRouter();
+const App = () => {
+  const router = useRouter();
+  const [firstname, setFirstName] = useState('');
+  const [lastname, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [gender, setGender] = useState('');
+  const [age, setAge] = useState(18);
+
+  const increaseAge = () => {
+    setAge(prevAge => (prevAge ? String(Number(prevAge) + 1) : '1'));
+  };
+
+  const decreaseAge = () => {
+    setAge(prevAge => (prevAge && Number(prevAge) > 0 ? String(Number(prevAge) - 1) : '0'));
+  };
+
   return (
     <View style={styles.container}>
-      <Image
-        source={loginImage}
-        style={styles.image}
-      />
-      <Text style={styles.logintext}>Login</Text>
-      <TextInput 
-        placeholder="Email" 
-        value={email}
-        onChangeText={setEmail}
-        style={styles.input}
-        keyboardType='email-address'
-      />
-      <TextInput 
-        placeholder="Password" 
-        value={password}
-        onChangeText={setPassword}
-        style={styles.input}
-        secureTextEntry
-      />
-      <TouchableOpacity onPress={()=>console.log('Login pressed')} style={styles.button}>
-        <Text style={styles.buttonText}>Continue</Text>
+      <TouchableOpacity style={styles.backButton} onPress={()=>router.push('/login')}>
+        <AntDesign name='arrowleft' color='black' size={20} />
       </TouchableOpacity>
-      <TouchableOpacity onPress={()=>router.push('/signup')}>
-        <Text style={styles.signuptext}>New To Yaakai? <Text style={styles.signuplink}>Sign Up Now</Text></Text>
-      </TouchableOpacity>
-      <Text style={styles.signuptext}>or sign up using</Text>
-      <TouchableOpacity onPress={()=>router.push('/signupusinggoogle')}>
-        <Image source={googleLogoImage} style={styles.googleicon}/>
-      </TouchableOpacity>      
-    </View>
-  )
-}
+      <Image source={signupImage} style={styles.image} />
+      <Text style={styles.signuptitletext}>Signup</Text>
 
-export default app
+      {/* Input Fields */}
+      <TextInput placeholder="First name" value={firstname} onChangeText={setFirstName} style={styles.input} />
+      <TextInput placeholder="Last name" value={lastname} onChangeText={setLastName} style={styles.input} />
+      <TextInput placeholder="Email" value={email} onChangeText={setEmail} style={styles.input} keyboardType="email-address" />
+      <TextInput placeholder="Password" value={password} onChangeText={setPassword} style={styles.input} secureTextEntry />
+
+      {/* Gender & Age Row */}
+      <View style={styles.rowContainer}>
+        {/* Gender Picker */}
+        <View style={styles.genderContainer}>
+          <Picker
+            placeholder='Gender'
+            selectedValue={gender}
+            onValueChange={(itemValue) => setGender(itemValue)}
+            style={styles.picker}
+          >
+            <Picker.Item label="Select Gender" value="" />
+            <Picker.Item label="Male" value="male" />
+            <Picker.Item label="Female" value="female" />
+            <Picker.Item label="Other" value="other" />
+          </Picker>
+        </View>
+
+        {/* Age Adjuster */}
+        <View style={styles.ageContainer}>
+          <TextInput 
+            placeholder="Age" 
+            value={age} 
+            onChangeText={setAge} 
+            keyboardType="numeric" 
+            style={styles.ageInput} 
+          />
+          <View style={styles.ageButtons}>
+            <TouchableOpacity onPress={increaseAge} style={styles.arrowButton}>
+              <AntDesign name="caretup" size={16} color="black" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={decreaseAge} style={styles.arrowButton}>
+              <AntDesign name="caretdown" size={16} color="black" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      {/* Signup Button */}
+      <TouchableOpacity onPress={() => console.log('Signup pressed')} style={styles.button}>
+        <Text style={styles.buttonText}>Sign Up</Text>
+      </TouchableOpacity>
+
+      {/* Signup with Google */}
+      <Text style={styles.signuptext}>or sign up with</Text>
+      <TouchableOpacity onPress={() => router.push('/signupusinggoogle')}>
+        <Image source={googleLogoImage} style={styles.googleicon} />
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+export default App;
 
 const styles = StyleSheet.create({
-  container:{
-    flex:1,
-    justifyContent:'center',
-    alignItems:'center',
-    flexDirection:'column',
-    backgroundColor:'white'
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
   },
-  image:{
-    width:300,
-    height:300,
-    marginBottom:2,
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
   },
-  logintext:{
-    fontSize:22,
-    fontWeight:'bold',
-    color:'#525252',
-    marginBottom:20,
+  image: {
+    width:200,
+    height: 200,
+    marginBottom: 10,
   },
-  input:{
-    width:'80%',
-    height:60,
-    borderWidth:1,
-    borderColor:'lightgrey',
-    borderRadius:20,
-    marginBottom:20,
-    paddingLeft:10,
-    fontSize:16,
-    shadowColor: '#000', 
-    shadowOffset: { width: 0, height: 2}, 
-    shadowOpacity: 0.2, 
-    shadowRadius: 2, 
+  signuptitletext: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#525252',
+    marginBottom: 20,
   },
-  button:{
-    width:'60%',
+  input: {
+    width: '80%',
+    height: 50,
+    borderWidth: 1,
+    borderColor: 'lightgrey',
+    borderRadius: 20,
+    marginBottom: 15,
+    paddingLeft: 10,
+    fontSize: 16,
+  },
+  rowContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '80%',
+    marginBottom: 20,
+  },
+  genderContainer: {
+    flex: 1,
     height:50,
-    justifyContent:'center',
-    alignItems:'center',
-    marginTop:10,
-    backgroundColor:'#009DA5',
-    borderRadius:20,
+    borderWidth: 1,
+    borderColor: 'lightgrey',
+    borderRadius: 20,
+    marginRight: 10,
+    paddingLeft:10,
+    paddingRight:10,
   },
-  buttonText:{
-    color:"white",
-    fontSize:20,
-    fontWeight:'bold'
+  pickerContainer: {
+    flex: 1,
+    overflow:'hidden',
+    justifyContent: 'center',
+    height:50,
   },
-  signuptext:{
-    marginTop:10,
-    fontSize:20,
+  picker: {
+    width: '100%',
+    height: 50,
+    borderWidth:0,
+    fontSize:16,
   },
-  signuplink:{
-    color:"#009DA5",
-    fontSize:20,
-    fontWeight:'bold'
+  ageContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height:50,
+    borderWidth: 1,
+    borderColor: 'lightgrey',
+    borderRadius: 20,
+    marginLeft: 10,
+    overflow: 'hidden',
   },
-  googleicon:{
-    marginTop:20,
-    height:27,
-    width:27
+  ageInput: {
+    width: 60,
+    height: 50,
+    textAlign: 'center',
+    fontSize: 16,
   },
-})
+  ageButtons: {
+    flexDirection: 'column',
+    backgroundColor: 'white',
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  arrowButton: {
+    paddingHorizontal: 10,
+  },
+  button: {
+    width: '80%',
+    height: 50,
+    backgroundColor: '#009DA5',
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  buttonText: {
+    fontSize: 18,
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  signuptext: {
+    marginTop: 10,
+    fontSize: 16,
+  },
+  googleicon: {
+    marginTop: 15,
+    height: 30,
+    width: 30,
+  },
+});
