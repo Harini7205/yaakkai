@@ -5,12 +5,6 @@ from api.auth import auth_router
 from models.userModel import User
 from schemas.userSchema import UserLoginInput
 
-@auth_router.get('/')
-def get(db:Session=Depends(get_db)):
-    if db:
-        print(db)
-        print("Database connected successfully")
-
 @auth_router.post('/login')
 def login_user(user:UserLoginInput,db:Session=Depends(get_db)):
     result=db.query(User).filter(User.email==user.email,User.password==user.password).first()
