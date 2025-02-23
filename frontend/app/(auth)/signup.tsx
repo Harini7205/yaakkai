@@ -6,26 +6,26 @@ import googleLogoImage from "@/assets/images/google-logo.png";
 import { useRouter } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons'; 
 
-const App = () => {
+const SignUp:React.FC = () => {
   const router = useRouter();
-  const [firstname, setFirstName] = useState('');
-  const [lastname, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [gender, setGender] = useState('');
-  const [age, setAge] = useState(18);
+  const [firstname, setFirstName] = useState<string>('');
+  const [lastname, setLastName] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [gender, setGender] = useState<string>('');
+  const [age, setAge] = useState<number>(18);
 
   const increaseAge = () => {
-    setAge(prevAge => (prevAge ? String(Number(prevAge) + 1) : '1'));
+    setAge(prevAge => (prevAge + 1));
   };
 
   const decreaseAge = () => {
-    setAge(prevAge => (prevAge && Number(prevAge) > 0 ? String(Number(prevAge) - 1) : '0'));
+    setAge(prevAge => (prevAge > 0 ? prevAge - 1 : 0));
   };
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={()=>router.push('/login')}>
+      <TouchableOpacity style={styles.backButton} onPress={()=>router.push('../login')}>
         <AntDesign name='arrowleft' color='black' size={20} />
       </TouchableOpacity>
       <Image source={signupImage} style={styles.image} />
@@ -58,8 +58,8 @@ const App = () => {
         <View style={styles.ageContainer}>
           <TextInput 
             placeholder="Age" 
-            value={age} 
-            onChangeText={setAge} 
+            value={age.toString()} 
+            onChangeText={(text)=>setAge(Number(text)||0)} 
             keyboardType="numeric" 
             style={styles.ageInput} 
           />
@@ -81,14 +81,14 @@ const App = () => {
 
       {/* Signup with Google */}
       <Text style={styles.signuptext}>or sign up with</Text>
-      <TouchableOpacity onPress={() => router.push('/signupusinggoogle')}>
+      <TouchableOpacity onPress={() => router.push('../signupusinggoogle')}>
         <Image source={googleLogoImage} style={styles.googleicon} />
       </TouchableOpacity>
     </View>
   );
 };
 
-export default App;
+export default SignUp;
 
 const styles = StyleSheet.create({
   container: {
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     borderColor: 'lightgrey',
     borderRadius: 20,
     marginRight: 10,
-    paddingLeft:10,
+    paddingLeft:5,
     paddingRight:10,
   },
   pickerContainer: {

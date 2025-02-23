@@ -1,14 +1,14 @@
 import { View, TouchableOpacity, Text, StyleSheet , Image, TextInput, Button} from 'react-native'
 import React from 'react';
 import { useState } from 'react';
-import loginImage from "@/assets/images/login-image.png";
-import googleLogoImage from "@/assets/images/google-logo.png";
+import loginImage from "@assets/images/login-image.png";
+import googleLogoImage from "@assets/images/google-logo.png";
 import { useRouter } from 'expo-router';
 
-const app = () => {
+const Login:React.FC = () => {
   const router=useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
   return (
     <View style={styles.container}>
       <Image
@@ -30,21 +30,21 @@ const app = () => {
         style={styles.input}
         secureTextEntry
       />
-      <TouchableOpacity onPress={()=>console.log('Login pressed')} style={styles.button}>
+      <TouchableOpacity onPress={()=>router.push('/(main)/home')} style={styles.button}>
         <Text style={styles.buttonText}>Continue</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={()=>router.push('/signup')}>
+      <TouchableOpacity onPress={()=>router.push('../signup')}>
         <Text style={styles.signuptext}>New To Yaakai? <Text style={styles.signuplink}>Sign Up Now</Text></Text>
       </TouchableOpacity>
       <Text style={styles.signuptext}>or sign up using</Text>
-      <TouchableOpacity onPress={()=>router.push('/signupusinggoogle')}>
+      <TouchableOpacity onPress={()=>router.push('../signupusinggoogle')}>
         <Image source={googleLogoImage} style={styles.googleicon}/>
       </TouchableOpacity>      
     </View>
   )
 }
 
-export default app
+export default Login
 
 const styles = StyleSheet.create({
   container:{

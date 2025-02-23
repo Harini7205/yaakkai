@@ -3,16 +3,16 @@ import React from 'react'
 import splashImage from "@/assets/images/yaakkai-splash.png";
 import { useRouter } from 'expo-router';
 
-const App = () => {
+const Index:React.FC = () => {
   const router=useRouter();
   return (
-      <Pressable onPress={()=>router.push('/login')} style={styles.container}>
-        <Image source={splashImage} style={styles.image}/>
+      <Pressable onPress={()=>router.push('../(auth)/login')} style={styles.container}>
+        <Image source={splashImage} style={styles.image} resizeMode="contain"/>
       </Pressable>
   )
 }
 
-export default App
+export default Index
 
 const styles = StyleSheet.create({
   container:{
@@ -24,7 +24,6 @@ const styles = StyleSheet.create({
   image:{
     width:'90%',
     height:'30%',
-    resizeMode:'contain',
     justifyContent:'center'
   }
 })
