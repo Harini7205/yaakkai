@@ -9,6 +9,36 @@ const Login:React.FC = () => {
   const router=useRouter();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+
+  const handleLogin = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:5000/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.status === 200) {
+        // Assuming the server sends back the access token
+        console.log('Login successful', data.message);
+        router.push('/(main)/home'); // Redirect to home page
+      } else {
+        console.error('Login failed', data.message);
+        alert('Login failed: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('An error occurred during login');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Image
@@ -30,7 +60,7 @@ const Login:React.FC = () => {
         style={styles.input}
         secureTextEntry
       />
-      <TouchableOpacity onPress={()=>router.push('/(main)/home')} style={styles.button}>
+      <TouchableOpacity onPress={handleLogin} style={styles.button}>
         <Text style={styles.buttonText}>Continue</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={()=>router.push('../signup')}>

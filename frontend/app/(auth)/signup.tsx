@@ -23,6 +23,36 @@ const SignUp:React.FC = () => {
     setAge(prevAge => (prevAge > 0 ? prevAge - 1 : 0));
   };
 
+  const handleSignUp = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:5000/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstname,
+          lastname,
+          email,
+          password,
+          gender,
+          age
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.status === 201) {
+        console.log('User registered successfully');
+        router.push('/login'); // Redirect to login after successful signup
+      } else {
+        console.error(data.message);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.backButton} onPress={()=>router.push('../login')}>
@@ -75,7 +105,7 @@ const SignUp:React.FC = () => {
       </View>
 
       {/* Signup Button */}
-      <TouchableOpacity onPress={() => console.log('Signup pressed')} style={styles.button}>
+      <TouchableOpacity onPress={handleSignUp} style={styles.button}>
         <Text style={styles.buttonText}>Sign Up</Text>
       </TouchableOpacity>
 

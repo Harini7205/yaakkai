@@ -15,7 +15,7 @@ const BottomNav: React.FC = () => {
       </TouchableOpacity>
       <TouchableOpacity style={styles.navItem} onPress={() => router.push('../pastassessments')}>
         <Icon name="assignment" size={28} color="white" />
-        <Text style={styles.navText}>Assessments</Text>
+        <Text style={styles.navText}>Past Assessments</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.navItem} onPress={() => router.push('../profile')}>
         <Icon name="person" size={28} color="white" />

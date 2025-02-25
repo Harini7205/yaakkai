@@ -1,4 +1,8 @@
-fastapi
-sqlalchemy
-pydantic
+flask
+flask-sqlalchemy
+flask-migrate
+psycopg2
 python-dotenv
+flask_bcrypt
+flask_jwt_extended
+flask_cors
