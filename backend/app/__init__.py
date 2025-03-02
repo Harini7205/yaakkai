@@ -6,6 +6,7 @@ from app.database.db import db
 from .routes import register_routes
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS 
+from flask_jwt_extended import JWTManager
 
 bcrypt=Bcrypt()
 
@@ -17,5 +18,6 @@ def create_app():
     bcrypt.init_app(app)
     CORS(app)
     Migrate(app,db)
+    jwt=JWTManager(app)
     register_routes(app)
     return app

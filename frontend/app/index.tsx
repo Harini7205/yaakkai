@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet , Image} from 'react-native'
+import { Pressable, StyleSheet , Image, Text} from 'react-native'
 import React from 'react'
 import splashImage from "@/assets/images/yaakkai-splash.png";
+import psgLogo from "@/assets/images/psg-logo.png";
 import { useRouter } from 'expo-router';
 
 const Index:React.FC = () => {
@@ -25,5 +26,14 @@ const styles = StyleSheet.create({
     width:'90%',
     height:'30%',
     justifyContent:'center'
+  },
+  imagelogo:{
+    width:'50%',
+    height:'50%',
+  },
+  text:{
+    fontSize:20,
+    color:'white',
+    fontWeight:'bold'
   }
 })

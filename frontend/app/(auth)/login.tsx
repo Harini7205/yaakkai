@@ -1,6 +1,7 @@
 import { View, TouchableOpacity, Text, StyleSheet , Image, TextInput, Button} from 'react-native'
 import React from 'react';
 import { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import loginImage from "@assets/images/login-image.png";
 import googleLogoImage from "@assets/images/google-logo.png";
 import { useRouter } from 'expo-router';
@@ -27,7 +28,8 @@ const Login:React.FC = () => {
 
       if (response.status === 200) {
         // Assuming the server sends back the access token
-        console.log('Login successful', data.message);
+        console.log('Login successful', data.message, data.access_token);
+        await AsyncStorage.setItem('access_token', data.access_token);
         router.push('/(main)/home'); // Redirect to home page
       } else {
         console.error('Login failed', data.message);

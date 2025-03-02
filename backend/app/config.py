@@ -6,4 +6,4 @@ load_dotenv()
 class Config:
     SQLALCHEMY_DATABASE_URI=os.getenv('DB_URI')
     SQLALCHEMY_TRACK_MODIFICATIONS=False
-    JWT_SECRET_KEY = 'your-jwt-secret-key'
+    JWT_SECRET_KEY=os.getenv('JWT_SECRET_KEY')
