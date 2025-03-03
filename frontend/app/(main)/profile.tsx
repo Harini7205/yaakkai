@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
@@ -13,27 +13,73 @@ const Profile = () => {
   });
 
   useEffect(() => {
+    const refreshAccessToken = async () => {
+      try {
+        const refreshToken = await AsyncStorage.getItem('refresh_token');
+        if (!refreshToken) {
+          console.log('No refresh token found');
+          return null;
+        }
+  
+        const response = await fetch('http://127.0.0.1:5000/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+  
+        if (!response.ok) {
+          console.log('Failed to refresh token');
+          return null;
+        }
+  
+        const data = await response.json();
+        await AsyncStorage.setItem('access_token', data.access_token);
+        return data.access_token;
+      } catch (error) {
+        console.error('Error refreshing token:', error);
+        return null;
+      }
+    };
+  
+    // Function to fetch profile and handle expired tokens
     const fetchProfile = async () => {
       try {
-        const token = await AsyncStorage.getItem('access_token');
+        let token = await AsyncStorage.getItem('access_token');
         if (!token) {
-          console.log('Error', 'User not authenticated');
+          console.log('No access token found');
           return;
         }
-
-        const response = await fetch('http://127.0.0.1:5000/auth/profile', {
+  
+        let response = await fetch('http://127.0.0.1:5000/auth/profile', {
           method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch profile');
+  
+        if (response.status === 401) {
+          console.log('Access token expired, trying to refresh...');
+          token = await refreshAccessToken();
+  
+          if (!token) {
+            console.log('Token refresh failed. User needs to log in again.');
+            alert('Session expired. Please log in again.');
+            handleLogout();
+            router.push('/(auth)/login');
+            return;
+          }
+  
+          // Retry fetching profile with the new token
+          response = await fetch('http://127.0.0.1:5000/auth/profile', {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          });
         }
+  
+        if (!response.ok) throw new Error('Failed to fetch profile');
+  
         const data = await response.json();
         setUserData(data);
+        console.log('Profile Data:', data);
+        return data;
       } catch (error) {
         console.error('Error fetching profile:', error);
       }
