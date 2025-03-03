@@ -1,7 +1,6 @@
 import { Pressable, StyleSheet , Image, Text} from 'react-native'
 import React from 'react'
 import splashImage from "@/assets/images/yaakkai-splash.png";
-import psgLogo from "@/assets/images/psg-logo.png";
 import { useRouter } from 'expo-router';
 
 const Index:React.FC = () => {

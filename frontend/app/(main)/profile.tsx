@@ -67,14 +67,12 @@ const Profile = () => {
   return (
     <View style={styles.outer}>
     <View style={styles.container}>
-      {/* Back Button */}
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <AntDesign name='arrowleft' color='black' size={20} />
       </TouchableOpacity>
 
       <View>
         <View style={styles.profileSection}>
-          {/* Profile Picture */}
           <Image source={profilePic} style={styles.profilePic} />
 
           <View style={styles.nameAndEmail}>
@@ -84,7 +82,6 @@ const Profile = () => {
         </View>
       </View>
 
-      {/* Profile Card */}
       <View style={styles.profileCard}>
         <View style={[styles.cardColumn,styles.columnWithBorder]}>
           <Text style={styles.cardLabel}>Age</Text>

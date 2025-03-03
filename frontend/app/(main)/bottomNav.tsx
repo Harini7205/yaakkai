@@ -1,4 +1,3 @@
-// BottomNav.tsx
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import React from 'react';
 import Icon from 'react-native-vector-icons/MaterialIcons';

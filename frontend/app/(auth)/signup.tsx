@@ -44,7 +44,7 @@ const SignUp:React.FC = () => {
 
       if (response.status === 201) {
         console.log('User registered successfully');
-        router.push('/login'); // Redirect to login after successful signup
+        router.push('/login'); 
       } else {
         console.error(data.message);
       }
@@ -61,15 +61,12 @@ const SignUp:React.FC = () => {
       <Image source={signupImage} style={styles.image} />
       <Text style={styles.signuptitletext}>Signup</Text>
 
-      {/* Input Fields */}
       <TextInput placeholder="First name" value={firstname} onChangeText={setFirstName} style={styles.input} />
       <TextInput placeholder="Last name" value={lastname} onChangeText={setLastName} style={styles.input} />
       <TextInput placeholder="Email" value={email} onChangeText={setEmail} style={styles.input} keyboardType="email-address" />
       <TextInput placeholder="Password" value={password} onChangeText={setPassword} style={styles.input} secureTextEntry />
 
-      {/* Gender & Age Row */}
       <View style={styles.rowContainer}>
-        {/* Gender Picker */}
         <View style={styles.genderContainer}>
           <Picker
             placeholder='Gender'
@@ -84,7 +81,6 @@ const SignUp:React.FC = () => {
           </Picker>
         </View>
 
-        {/* Age Adjuster */}
         <View style={styles.ageContainer}>
           <TextInput 
             placeholder="Age" 
@@ -104,12 +100,10 @@ const SignUp:React.FC = () => {
         </View>
       </View>
 
-      {/* Signup Button */}
       <TouchableOpacity onPress={handleSignUp} style={styles.button}>
         <Text style={styles.buttonText}>Sign Up</Text>
       </TouchableOpacity>
 
-      {/* Signup with Google */}
       <Text style={styles.signuptext}>or sign up with</Text>
       <TouchableOpacity onPress={() => router.push('../signupusinggoogle')}>
         <Image source={googleLogoImage} style={styles.googleicon} />

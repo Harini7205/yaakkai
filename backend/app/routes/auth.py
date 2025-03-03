@@ -69,7 +69,6 @@ def get_profile():
         "latestTestResult":"None"
     }), 200
 
-# Change password route
 @auth_routes.route('/change-password', methods=['POST'])
 @jwt_required()
 def change_password():
@@ -91,8 +90,6 @@ def change_password():
 
     return jsonify({"message": "Password updated successfully"}), 200
 
-
-# Update email route
 @auth_routes.route('/update-email', methods=['POST'])
 @jwt_required()
 def update_email():
@@ -102,7 +99,6 @@ def update_email():
     if not new_email:
         return jsonify({"message": "Missing email"}), 400
 
-    # Ensure the email is unique
     existing_user = User.query.filter(User.email == new_email).first()
     if existing_user:
         return jsonify({"message": "Email already in use"}), 400

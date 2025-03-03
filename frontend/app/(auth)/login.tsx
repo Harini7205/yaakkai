@@ -27,10 +27,9 @@ const Login:React.FC = () => {
       const data = await response.json();
 
       if (response.status === 200) {
-        // Assuming the server sends back the access token
         console.log('Login successful', data.message, data.access_token);
         await AsyncStorage.setItem('access_token', data.access_token);
-        router.push('/(main)/home'); // Redirect to home page
+        router.push('/(main)/home'); 
       } else {
         console.error('Login failed', data.message);
         alert('Login failed: ' + data.message);
