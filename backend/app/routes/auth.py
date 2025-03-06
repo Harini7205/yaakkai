@@ -1,5 +1,6 @@
 from flask import Blueprint,jsonify,request
 from app.models.user import User
+from app.models.assessment_results import AssessmentResult
 from app.database.db import db
 from flask_jwt_extended import create_access_token,jwt_required,get_jwt_identity,create_refresh_token
 
@@ -67,14 +68,27 @@ def get_profile():
     user = User.query.get(int(user_id))
     if not user:
         return jsonify({"message": "User not found"}), 404
+    
+    assessments = AssessmentResult.query.filter(AssessmentResult.user_id == user_id).all()
+
+    num_tests_taken = len(assessments)
+    latest_test_result = 'None'
+    if num_tests_taken > 0:
+        latest_assessment = sorted(assessments, key=lambda x: x.created_at, reverse=True)[0]
+        latest_test_result = latest_assessment.prediction
+    
+    mapping={0:"Low",1:"Moderate",2:"High"}
+    if latest_test_result!='None':
+        latest_test_result=mapping[int(latest_test_result)]
 
     return jsonify({
+        "userid": user_id,
         "name": f"{user.firstname} {user.lastname}",
         "email": user.email,
         "gender": user.gender,
         "age": user.age,
-        "testsTaken":0,
-        "latestTestResult":"None"
+        "testsTaken":num_tests_taken,
+        "latestTestResult":latest_test_result
     }), 200
 
 @auth_routes.route('/change-password', methods=['POST'])

@@ -29,10 +29,11 @@ const Assessment: React.FC = () => {
   const handleAnswer = async (answer: string) => {
     setSelectedOption(answer);
 
-    setAnswers((prevAnswers) => ({
-      ...prevAnswers,
+    const newAnswers = {
+      ...answers,
       [questions[currentQuestion].parameter]: answer,
-    }));
+    };
+    setAnswers(newAnswers);
 
     setTimeout(async () => {
       if (currentQuestion < questions.length - 1) {
@@ -41,7 +42,6 @@ const Assessment: React.FC = () => {
       } else {
         setProgress(100);
 
-        // Fetch profile data (age, gender)
         try {
           let token = await AsyncStorage.getItem('access_token');
           if (!token) {
@@ -59,14 +59,14 @@ const Assessment: React.FC = () => {
           }
 
           const profileData = await profileResponse.json();
-          setAnswers((prevAnswers) => ({
-            ...prevAnswers,
-            "Age": profileData.age,
-            "Gender": profileData.gender,
-          }));
-
-          // Send the data to backend
-          sendDataToBackend();
+          const updatedAnswers = {
+              ...newAnswers,
+              "Age": profileData.age,
+              "Gender": profileData.gender,
+              "user_id":profileData.userid
+          };
+          sendDataToBackend(updatedAnswers);
+          return updatedAnswers;
 
         } catch (error) {
           console.error('Error fetching profile data:', error);
@@ -84,7 +84,7 @@ const Assessment: React.FC = () => {
     }
   };
 
-  const sendDataToBackend = async () => {
+  const sendDataToBackend = async (answers:{ [key: string]: string }) => {
     try {
       const response = await fetch('http://127.0.0.1:5000/predict', {  
         method: 'POST',
@@ -94,6 +94,14 @@ const Assessment: React.FC = () => {
 
       const result = await response.json();
       console.log('Prediction Result', `Your risk level: ${result.prediction}`);
+      if (!(result.prediction in ['0','1','2'])){
+        return "Prediction value undefined"
+      }
+
+      router.push({
+        pathname: '/(main)/resultscreen',
+        params: { prediction: Number(result.prediction) },
+      });
     } catch (error) {
       console.error('Error sending data:', error);
       console.log('Error', 'Failed to send data to the server.');
