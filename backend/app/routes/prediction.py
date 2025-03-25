@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+"""from flask import Blueprint, request, jsonify
 import joblib
 import pandas as pd
 import xgboost as xgb
@@ -50,4 +50,4 @@ def predict():
     
     except Exception as e:
         print(e)
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e)}), 500"""

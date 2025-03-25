@@ -1,224 +1,398 @@
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView} from 'react-native';
-import React, { useState } from 'react';
-import { useRouter } from 'expo-router';
-import { ProgressBar } from 'react-native-paper';
-import BottomNav from './bottomNav';
-import { AntDesign } from '@expo/vector-icons'; 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, TextInput, Animated, KeyboardTypeOptions } from 'react-native';
+import Slider from '@react-native-community/slider';
+import smoke from "@assets/images/smoke.png";
 
-const Assessment: React.FC = () => {
-  const router = useRouter();
-  const questions = [
-    { id: 1, question: "Do you smoke?", options: ["Yes", "No"], parameter: "Smoking" },
-    { id: 2, question: "Do you consume alcohol?", options: ["Yes", "No"], parameter: "Alcohol_Consumption" },
-    { id: 3, question: "How would you describe your level of physical activity?", options: ["Low", "Moderate", "High"], parameter: "Physical_Activity_Level" },
-    { id: 4, question: "Do you have a family history of heart disease?", options: ["Yes", "No"], parameter: "Family_History" },
-    { id: 5, question: "Have you been diagnosed with hypertension (high blood pressure)?", options: ["Yes", "No"], parameter: "Hypertension" },
-    { id: 6, question: "How would you rate your stress level?", options: ["Low stress", "Moderate stress", "High stress"], parameter: "Stress_Level" }
-  ];
+const questions = [
+  {
+    question: 'What is your age?',
+    inputType: 'slider',
+    minValue: 18,
+    maxValue: 80,
+    sliderShape: 'rounded', // Custom slider shape
+  },
+  {
+    question: 'What is your gender?',
+    inputType: 'options',
+    options: ['Male', 'Female', 'Other'],
+  },
+  {
+    question: 'How often do you smoke?',
+    inputType: 'uSlider', // U-shaped slider simulation
+    options: ['Non-Smoker', 'Occasional', 'Regular', 'Heavy'],
+  },
+  {
+    question: 'How many hours sedentary?',
+    inputType: 'textInput',
+    keyboardType: 'numeric',
+    placeholder: 'Enter hours',
+  },
+  {
+    question: 'Diagnosed with hypertension?',
+    inputType: 'toggle', // Toggle switch
+    options: ['Yes', 'No'],
+  },
+  {
+    question: 'Hypertension severity?',
+    inputType: 'options',
+    options: ['Mild', 'Moderate', 'Severe'],
+  },
+  {
+    question: 'Do you have diabetes?',
+    inputType: 'toggle',
+    options: ['Yes', 'No'],
+  },
+  {
+    question: 'Hours of sleep?',
+    inputType: 'slider',
+    minValue: 0,
+    maxValue: 12,
+    sliderShape: 'triangle', // Another custom slider shape
+  },
+  {
+    question: 'Social connectedness level?',
+    inputType: 'options',
+    options: ['High', 'Moderate', 'Low', 'Very Low'],
+  },
+  {
+    question: 'What is your BMI?',
+    inputType: 'textInput',
+    keyboardType: 'numeric',
+    placeholder: 'Enter BMI',
+  },
+];
 
+const QuestionPage = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [selectedOption, setSelectedOption] = useState<string>('');
-  const [answers, setAnswers] = useState<{ [key: string]: string }>({});
+  const [sliderValue, setSliderValue] = useState(questions[currentQuestion].minValue);
+  const [textInputValue, setTextInputValue] = useState('');
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const isYesNoQuestion = questions[currentQuestion].options.length === 2 && 
-                          questions[currentQuestion].options.includes("Yes") &&
-                          questions[currentQuestion].options.includes("No");
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  }, [currentQuestion]);
 
-  const handleAnswer = async (answer: string) => {
-    setSelectedOption(answer);
-
-    const newAnswers = {
-      ...answers,
-      [questions[currentQuestion].parameter]: answer,
-    };
-    setAnswers(newAnswers);
-
-    setTimeout(async () => {
+  const handleNext = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
       if (currentQuestion < questions.length - 1) {
         setCurrentQuestion(currentQuestion + 1);
-        setProgress(((currentQuestion + 1) / questions.length) * 100);
-      } else {
-        setProgress(100);
-
-        try {
-          let token = await AsyncStorage.getItem('access_token');
-          if (!token) {
-            console.log('No access token found');
-            return;
-          }
-
-          const profileResponse = await fetch('http://127.0.0.1:5000/auth/profile', {
-            method: 'GET',
-            headers: { 'Authorization': `Bearer ${token}`,'Content-Type': 'application/json' },
-          });
-
-          if (!profileResponse.ok) {
-            throw new Error('Failed to fetch profile data');
-          }
-
-          const profileData = await profileResponse.json();
-          const updatedAnswers = {
-              ...newAnswers,
-              "Age": profileData.age,
-              "Gender": profileData.gender,
-              "user_id":profileData.userid
-          };
-          sendDataToBackend(updatedAnswers);
-          return updatedAnswers;
-
-        } catch (error) {
-          console.error('Error fetching profile data:', error);
-          console.log('Error', 'Failed to fetch profile data.');
+        setProgress((currentQuestion + 1) / questions.length);
+        if (questions[currentQuestion + 1].inputType === 'slider') {
+          setSliderValue(questions[currentQuestion + 1].minValue);
         }
+        setTextInputValue('');
+        setSelectedOption(null);
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
       }
-    }, 1000);
+    });
   };
 
-  const goBack = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion(currentQuestion - 1);
-      setProgress(((currentQuestion - 1) / questions.length) * 100);
-      setSelectedOption('');
-    }
+  const handleBack = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      if (currentQuestion > 0) {
+        setCurrentQuestion(currentQuestion - 1);
+        setProgress((currentQuestion - 1) / questions.length);
+        if (questions[currentQuestion - 1].inputType === 'slider') {
+          setSliderValue(questions[currentQuestion - 1].minValue);
+        }
+        setTextInputValue('');
+        setSelectedOption(null);
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
+      }
+    });
   };
 
-  const sendDataToBackend = async (answers:{ [key: string]: string }) => {
-    try {
-      const response = await fetch('http://127.0.0.1:5000/predict', {  
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(answers),
-      });
-
-      const result = await response.json();
-      console.log('Prediction Result', `Your risk level: ${result.prediction}`);
-      if (!(result.prediction in ['0','1','2'])){
-        return "Prediction value undefined"
-      }
-
-      router.push({
-        pathname: '/(main)/resultscreen',
-        params: { prediction: Number(result.prediction) },
-      });
-    } catch (error) {
-      console.error('Error sending data:', error);
-      console.log('Error', 'Failed to send data to the server.');
+  const renderOptions = (options: string[]) => {
+    if (questions[currentQuestion].inputType === 'uSlider') {
+      return (
+        <View style={styles.uSliderContainer}>
+          {options.map((option, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[styles.uSliderOption, selectedOption === option && styles.selectedOption]}
+              onPress={() => setSelectedOption(option)}
+            >
+              <Text style={styles.uSliderText}>{option}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      );
     }
+    if (questions[currentQuestion].inputType === 'toggle') {
+      return (
+        <View style={styles.toggleContainer}>
+          {options.map((option, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[styles.toggleOption, selectedOption === option && styles.selectedToggle]}
+              onPress={() => setSelectedOption(option)}
+            >
+              <Text style={styles.toggleText}>{option}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      );
+    }
+    return (
+      <View style={styles.optionsContainer}>
+        {options.map((option, index) => (
+          <TouchableOpacity
+            key={index}
+            style={[styles.optionButton, selectedOption === option && styles.selectedOption]}
+            onPress={() => setSelectedOption(option)}
+          >
+            <Text style={styles.optionText}>{option}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
+
+  const renderSlider = () => {
+    const sliderShape = questions[currentQuestion].sliderShape;
+    return (
+      <View style={styles.sliderContainer}>
+        <Slider
+          style={styles.slider}
+          minimumValue={questions[currentQuestion].minValue}
+          maximumValue={questions[currentQuestion].maxValue}
+          value={sliderValue}
+          onValueChange={setSliderValue}
+          thumbTintColor={sliderShape === 'rounded' ? '#42a5f5' : '#ff7043'}
+        />
+        <Text style={styles.sliderValueText}>{sliderValue}</Text>
+      </View>
+    );
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.outer}>
-      <View style={styles.container}>
-        {currentQuestion > 0 && (
-          <TouchableOpacity onPress={goBack} style={styles.backButton}>
-            <AntDesign name='arrowleft' color='black' size={20} />
-          </TouchableOpacity>
-        )}
-        <View style={[styles.mainContainer, { height: isYesNoQuestion ? '40%' : '50%' }]}>
-          <View style={styles.optionsContainer}>
-            <Text style={{ fontWeight: 'bold', textAlign: 'center', fontSize: 16 }}>LIFESTYLE ASSESSMENT</Text>
-            <View style={styles.progressbarcontainer}>
-              <ProgressBar progress={progress / 100} color="#009DA5" style={styles.progressBar} />
-            </View>
-            <Text style={styles.question}>{questions[currentQuestion].question}</Text>
-            <View style={styles.optionsWrapper}>
-              {questions[currentQuestion].options.map((option, index) => (
-                <TouchableOpacity key={index} onPress={() => handleAnswer(option)} style={[
-                  styles.optionButton,
-                  selectedOption === option && styles.selectedOption, 
-                ]}>
-                  <Text style={styles.optionText}>{option}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
+    <View style={styles.outerContainer}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Your Health Survey</Text>
+        <View style={styles.progressBarContainer}>
+          <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
         </View>
+        <Animated.View style={{ ...styles.questionArea, opacity: fadeAnim }}>
+          <Text style={styles.questionText}>{questions[currentQuestion].question}</Text>
+          <Image source={smoke} style={styles.image} />
+          {questions[currentQuestion].inputType === 'slider' && renderSlider()}
+          {questions[currentQuestion].inputType === 'textInput' && (
+            <TextInput
+              style={styles.textInput}
+              keyboardType={questions[currentQuestion].keyboardType as KeyboardTypeOptions}
+              placeholder={questions[currentQuestion].placeholder}
+              value={textInputValue}
+              onChangeText={setTextInputValue}
+            />
+          )}
+          {['options', 'uSlider', 'toggle'].includes(questions[currentQuestion].inputType) && renderOptions(questions[currentQuestion].options || [])}
+        </Animated.View>
+      </ScrollView>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.navButton} onPress={handleBack}>
+          <Text style={styles.navButtonText}>{'< Back'}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navButton} onPress={handleNext}>
+          <Text style={styles.navButtonText}>{'Next >'}</Text>
+        </TouchableOpacity>
       </View>
-      <BottomNav />
-    </ScrollView>
+    </View>
   );
 };
 
-export default Assessment;
-
 const styles = StyleSheet.create({
-  outer: {
-    flexGrow: 1,
-    width: '100%',
+  outerContainer: {
+    flex: 1,
+    backgroundColor: '#e0f2f7',
   },
   container: {
-    flex: 1,
-    justifyContent: 'center',
+    flexGrow: 1,
     alignItems: 'center',
     padding: 20,
-    backgroundColor: 'white',
+    paddingBottom: 80,
   },
-  mainContainer: {
-    height: '50%',
-    width: '90%',
-    backgroundColor: '#009DA5',
-    borderRadius: 10,
-    display: 'flex',
-    justifyContent: 'center',
-    alignContent: 'center',
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    marginTop: 20,
+    color: '#283593',
+  },
+  progressBarContainer: {
+    width: '100%',
+    height: 10,
+    backgroundColor: '#d1c4e9',
+    borderRadius: 5,
+    marginBottom: 20,
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#42a5f5',
+    borderRadius: 5,
+  },
+  questionArea: {
+    backgroundColor: '#4db6ac',
     padding: 20,
-  },
-  backButton: {
-    position: 'absolute',
-    top: 60,
-    left: 30,
-  },
-  optionsContainer: {
-    height: '100%', 
-    width: '100%', 
-    padding: 20,
-    backgroundColor: 'white',
     borderRadius: 10,
-    display: 'flex',
-    justifyContent: 'space-between', 
+    width: '100%',
     alignItems: 'center',
-    gap: 10,
+    justifyContent: 'center',
+    flexGrow: 1,
   },
-  question: {
-    fontSize: 22,
+  questionText: {
+    fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
+    color: 'white',
+    marginBottom: 20,
   },
-  optionsWrapper: {
-    display: 'flex',
-    justifyContent: 'center', 
-    alignItems: 'center',
+  image: {
+    width: 250,
+    height: 200,
+    marginBottom: 30,
+    resizeMode: 'contain',
+  },
+  optionsContainer: {
+    width: '100%',
+    marginTop: 20,
   },
   optionButton: {
     backgroundColor: 'white',
-    padding: 10,
-    marginVertical: 5,
-    borderColor: '#7a7a7a',
-    borderWidth: 1,
-    borderRadius: 10,
+    padding: 15,
+    borderRadius: 8,
+    marginVertical: 10,
     width: '100%',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
-  selectedOption: { 
-    borderColor: '#009DA5', 
-    borderWidth: 2 
+    borderWidth: 1,
+    borderColor: 'black',
   },
   optionText: {
-    color: 'black',
     fontSize: 18,
   },
-  progressbarcontainer: {
-    width: '80%',
-  },
-  progressBar: {
-    height: 30,
-    borderRadius: 10,
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     width: '100%',
+    padding: 20,
+    position: 'absolute',
+    bottom: 0,
+  },
+  navButton: {
+    backgroundColor: '#42a5f5',
+    padding: 15,
+    borderRadius: 8,
+    width: '48%',
+    alignItems: 'center',
+  },
+  navButtonText: {
+    color: 'white',
+    fontSize: 18,
+  },
+  sliderContainer: {
+    width: '100%',
+    marginTop: 20,
+  },
+  slider: {
+    width: '100%',
+    height: 40,
+  },
+  sliderValueText: {
+    fontSize: 18,
+    textAlign: 'center',
+    marginTop: 10,
+    color: 'white',
+  },
+  textInput: {
+    width: '100%',
+    height: 40,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    marginTop: 20,
+    color: 'black',
+  },
+  uSliderContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginTop: 20,
+  },
+  uSliderOption: {
+    backgroundColor: 'white',
+    padding: 15,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'black',
+  },
+  uSliderText: {
+    fontSize: 16,
+  },
+  selectedOption: {
+    backgroundColor: '#42a5f5',
+    borderColor: '#42a5f5',
+    color: 'white',
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginTop: 20,
+  },
+  toggleOption: {
+    backgroundColor: 'white',
+    padding: 15,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'black',
+  },
+  toggleText: {
+    fontSize: 16,
+  },
+  selectedToggle: {
+    backgroundColor: '#42a5f5',
+    borderColor: '#42a5f5',
+    color: 'white',
+  },
+  roundedThumb: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#42a5f5',
+  },
+  triangleThumb: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 10,
+    borderRightWidth: 10,
+    borderBottomWidth: 20,
+    borderStyle: 'solid',
+    backgroundColor: 'transparent',
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: '#42a5f5',
   },
 });
+
+export default QuestionPage;
