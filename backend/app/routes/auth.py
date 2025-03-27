@@ -1,54 +1,158 @@
-from flask import Blueprint,jsonify,request
+from flask import Blueprint, jsonify, request
 from app.models.user import User
 from app.models.assessment_results import AssessmentResult
 from app.database.db import db
-from flask_jwt_extended import create_access_token,jwt_required,get_jwt_identity,create_refresh_token
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, create_refresh_token
+import datetime
+import random
+import time
+from flask_mail import Message
 
-auth_routes=Blueprint('auth_routes',__name__)
+# Initialize Flask-Mail (initialized in app's create_app function)
+from app.mail import mail  # Assuming mail is initialized in app's create_app function
+
+auth_routes = Blueprint('auth_routes', __name__)
+
+# Simulated OTP storage (In a real app, use a database or cache like Redis)
+otp_storage = {}
+
+def generate_otp():
+    return random.randint(100000, 999999)
 
 @auth_routes.route('/')
 def home():
-    return jsonify({"message":"Welcome"})
+    return jsonify({"message": "Welcome"})
 
-@auth_routes.route('/signup',methods=['POST'])
+@auth_routes.route('/signup', methods=['POST'])
 def signup():
-    data=request.get_json()
-    firstname=data.get('firstname')
-    lastname=data.get('lastname')
-    email=data.get('email')
-    password=data.get('password')
-    gender=data.get('gender')
-    age=data.get('age')
+    data = request.get_json()
+    name = data.get('name')
+    email = data.get('email')
+    password = data.get('password')
 
-    if not firstname or not email or not password or not gender or not age:
-        return jsonify({"message":"Missing fields"}),400
+    if not name or not email or not password:
+        return jsonify({"message": "Missing fields"}), 400
     
-    existing_user=User.query.filter((User.email==email)).first()
+    existing_user = User.query.filter((User.email == email)).first()
     if existing_user:
-        return jsonify({"message":"User already exists"}),400
+        return jsonify({"message": "User already exists"}), 400
 
-    new_user=User(firstname=firstname,lastname=lastname,email=email,gender=gender,age=age)
+    new_user = User(name=name, email=email)
     new_user.set_password(password)
     db.session.add(new_user)
     db.session.commit()
-    return jsonify({"message":"User created successfully"}),201
 
-@auth_routes.route('/login',methods=['POST'])
+    # Generate OTP and store it for the new user
+    otp = generate_otp()
+    otp_storage[email] = {'otp': otp, 'timestamp': time.time()}
+
+    # Send OTP to user's email
+    send_otp_email(email, otp)
+
+    return jsonify({"message": "User created successfully, OTP sent to email"}), 201
+
+def send_otp_email(email, otp):
+    # Send OTP email using Flask-Mail
+    msg = Message("Your OTP Code", recipients=[email])
+    msg.body = f"Your OTP code is {otp}. It will expire in 5 minutes."
+    
+    try:
+        mail.send(msg)
+        print(f"OTP sent to {email}")  # Log to console or file
+    except Exception as e:
+        print(f"Error sending OTP to {email}: {str(e)}")
+        # Log or print the error to help debug
+        if 'socket' in str(e):
+            print("Network/socket error - ensure you can reach the SMTP server.")
+        else:
+            print(f"Unexpected error: {str(e)}")
+
+@auth_routes.route('/resend-otp', methods=['POST'])
+def resend_otp():
+    data = request.json
+    email = data.get('email')
+
+    if not email:
+        return jsonify({"message": "Email is required"}), 400
+
+    current_time = time.time()
+    
+    # Check if OTP exists for the user
+    if email in otp_storage:
+        last_otp_time = otp_storage[email]["timestamp"]
+        
+        # **Rate limiting**: Allow resend only after 30 seconds
+        if current_time - last_otp_time < 30:
+            return jsonify({"message": "Please wait before requesting a new OTP"}), 429
+    
+    # Generate a new OTP
+    otp = generate_otp()
+    otp_storage[email] = {"otp": otp, "timestamp": current_time}
+
+    # Send the new OTP
+    send_otp_email(email, otp)
+
+    return jsonify({"message": "OTP resent successfully"}), 200
+
+@auth_routes.route('/verify-otp', methods=['POST'])
+def verify_otp():
+    data = request.get_json()
+    email = data.get('email')
+    otp = data.get('otp')
+
+    if not email or not otp:
+        return jsonify({"message": "Email and OTP are required!"}), 400
+    
+    if email not in otp_storage:
+        return jsonify({"message": "OTP not generated for this email!"}), 400
+    
+    otp_data = otp_storage[email]
+    
+    # Check OTP expiration (e.g., expire after 5 minutes)
+    if time.time() - otp_data['timestamp'] > 300:  # 5 minutes = 300 seconds
+        return jsonify({"message": "OTP has expired. Please request a new one."}), 400
+    
+    # Validate OTP
+    print(otp_data)
+    try:
+        otp = int(otp)  # Convert received OTP to integer
+    except ValueError:
+        return jsonify({"message": "Invalid OTP format!"}), 400
+    
+    if otp != otp_data['otp']:
+        return jsonify({"message": "Invalid OTP!"}), 400
+    
+    # OTP is valid, remove OTP from storage (so it can't be reused)
+    del otp_storage[email]
+    
+    return jsonify({"message": "OTP verified successfully!"}), 200
+
+@auth_routes.route('/login', methods=['POST'])
 def login():
-    data=request.get_json()
-    email=data.get('email')
-    password=data.get('password')
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+    remember_me = data.get('rememberMe', False)
 
     if not email or not password:
-        return jsonify({"message":"Missing details"}),400
-    
-    user=User.query.filter((User.email==email)).first()
-    if not user or not user.check_password(password):
-        return jsonify({"message":"Invalid credentials"}),400
+        return jsonify({"message": "Missing details"}), 400
 
-    access_token = create_access_token(identity=str(user.id))
-    refresh_token = create_refresh_token(identity=str(user.id))
-    return jsonify({"message": "User logged in successfully", "access_token": access_token, "refresh_token":refresh_token}), 200
+    user = User.query.filter(User.email == email).first()
+    if not user or not user.check_password(password):
+        return jsonify({"message": "Invalid credentials"}), 400
+
+    # Set token expiration (short for normal, long for remember me)
+    expires_access = datetime.timedelta(hours=1)
+    expires_refresh = datetime.timedelta(days=7 if remember_me else 1)
+
+    access_token = create_access_token(identity=str(user.id), expires_delta=expires_access)
+    refresh_token = create_refresh_token(identity=str(user.id), expires_delta=expires_refresh)
+
+    return jsonify({
+        "message": "User logged in successfully",
+        "access_token": access_token,
+        "refresh_token": refresh_token
+    }), 200
 
 @auth_routes.route('/refresh', methods=['POST'])
 @jwt_required(refresh=True)
@@ -57,81 +161,17 @@ def refresh():
     new_access_token = create_access_token(identity=current_user)
     return jsonify({"access_token": new_access_token}), 200
 
-@auth_routes.route('/profile', methods=['GET'])
-@jwt_required()
-def get_profile():
-    user_id = get_jwt_identity()
-
-    if not user_id:
-        print("No token found")
-
-    user = User.query.get(int(user_id))
-    if not user:
-        return jsonify({"message": "User not found"}), 404
-    
-    assessments = AssessmentResult.query.filter(AssessmentResult.user_id == user_id).all()
-
-    num_tests_taken = len(assessments)
-    latest_test_result = 'None'
-    if num_tests_taken > 0:
-        latest_assessment = sorted(assessments, key=lambda x: x.created_at, reverse=True)[0]
-        latest_test_result = latest_assessment.prediction
-    
-    mapping={0:"Low",1:"Moderate",2:"High"}
-    if latest_test_result!='None':
-        latest_test_result=mapping[int(latest_test_result)]
-
-    return jsonify({
-        "userid": user_id,
-        "name": f"{user.firstname} {user.lastname}",
-        "email": user.email,
-        "gender": user.gender,
-        "age": user.age,
-        "testsTaken":num_tests_taken,
-        "latestTestResult":latest_test_result
-    }), 200
-
-@auth_routes.route('/change-password', methods=['POST'])
-@jwt_required()
+@auth_routes.route('/reset-password', methods=['POST'])
 def change_password():
     data = request.get_json()
-    current_password = data.get('current_password')
+    email=data.get('email')
     new_password = data.get('new_password')
 
-    if not current_password or not new_password:
+    if not new_password:
         return jsonify({"message": "Missing fields"}), 400
-
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-
-    if not user or not user.check_password(current_password):
-        return jsonify({"message": "Invalid current password"}), 400
-
+    
+    user = User.query.filter(User.email == email).first()
     user.set_password(new_password)
     db.session.commit()
 
     return jsonify({"message": "Password updated successfully"}), 200
-
-@auth_routes.route('/update-email', methods=['POST'])
-@jwt_required()
-def update_email():
-    data = request.get_json()
-    new_email = data.get('new_email')
-
-    if not new_email:
-        return jsonify({"message": "Missing email"}), 400
-
-    existing_user = User.query.filter(User.email == new_email).first()
-    if existing_user:
-        return jsonify({"message": "Email already in use"}), 400
-
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-
-    if not user:
-        return jsonify({"message": "User not found"}), 404
-
-    user.email = new_email
-    db.session.commit()
-
-    return jsonify({"message": "Email updated successfully"}), 200

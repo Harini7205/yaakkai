@@ -1,142 +1,270 @@
-import { View, TouchableOpacity, Text, StyleSheet , Image, TextInput, Button} from 'react-native'
-import React from 'react';
-import { useState } from 'react';
+import { View, TouchableOpacity, Text, StyleSheet, Image, TextInput} from 'react-native';
+import React, { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons'; // For back button icon
 import loginImage from "@assets/images/login-image.png";
 import googleLogoImage from "@assets/images/google-logo.png";
-import { useRouter } from 'expo-router';
+import { Checkbox } from 'react-native-paper';
 
-const Login:React.FC = () => {
-  const router=useRouter();
+const Login: React.FC = () => {
+  const router = useRouter();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [rememberMe, setRememberMe] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+
+  useEffect(() => {
+    const loadRememberedEmail = async () => {
+      const remember = await AsyncStorage.getItem('remember_me');
+      if (remember === 'true') {
+        const savedEmail = await AsyncStorage.getItem('saved_email');
+        if (savedEmail) {
+          setEmail(savedEmail);
+          setRememberMe(true);
+        }
+      }
+    };
+  
+    loadRememberedEmail();
+  }, []);
 
   const handleLogin = async () => {
     try {
       const response = await fetch('http://127.0.0.1:5000/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       });
-
+  
       const data = await response.json();
-
+  
       if (response.status === 200) {
-        console.log('Login successful', data.message, data.access_token, data.refresh_token);
+        console.log('Login successful', data.message);
+  
+        // Store tokens
         await AsyncStorage.setItem('access_token', data.access_token);
         await AsyncStorage.setItem('refresh_token', data.refresh_token);
-        router.push('/(main)/home'); 
+  
+        // Save email if 'Remember Me' is checked
+        if (rememberMe) {
+          await AsyncStorage.setItem('remember_me', 'true');
+          await AsyncStorage.setItem('saved_email', email);
+        } else {
+          await AsyncStorage.removeItem('remember_me');
+          await AsyncStorage.removeItem('saved_email');
+        }
+  
+        router.push('/(main)/home');
       } else {
-        console.error('Login failed', data.message);
         alert('Login failed: ' + data.message);
       }
     } catch (error) {
-      console.error('Error:', error);
       alert('An error occurred during login');
     }
-  };
+  };  
 
   return (
     <View style={styles.container}>
-      <Image
-        source={loginImage}
-        style={styles.image}
-      />
-      <Text style={styles.logintext}>Login</Text>
-      <TextInput 
-        placeholder="Email" 
-        value={email}
-        onChangeText={setEmail}
-        style={styles.input}
-        keyboardType='email-address'
-      />
-      <TextInput 
-        placeholder="Password" 
-        value={password}
-        onChangeText={setPassword}
-        style={styles.input}
-        secureTextEntry
-      />
-      <TouchableOpacity onPress={handleLogin} style={styles.button}>
-        <Text style={styles.buttonText}>Continue</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={()=>router.push('../signup')}>
-        <Text style={styles.signuptext}>New To Yaakai? <Text style={styles.signuplink}>Sign Up Now</Text></Text>
-      </TouchableOpacity>
-      <Text style={styles.signuptext}>or sign up using</Text>
-      <TouchableOpacity onPress={()=>router.push('../signupusinggoogle')}>
-        <Image source={googleLogoImage} style={styles.googleicon}/>
-      </TouchableOpacity>      
-    </View>
-  )
-}
+      {/* Top Section with Image & Back Button */}
+      <View style={styles.topSection}>
+        <TouchableOpacity onPress={() => router.push('/(auth)/langselection')} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
+        <Image source={loginImage} style={styles.image} />
+      </View>
 
-export default Login
+      {/* Grey Background for Login Header */}
+      <View style={styles.loginHeader}>
+        <Text style={styles.loginText}>Login to your account</Text>
+      </View>
+
+      {/* Bottom Section with Form & Options */}
+      <View style={styles.bottomSection}>
+        {/* Social Login */}
+        <View style={styles.socialIcons}>
+          <TouchableOpacity>
+            <Image source={googleLogoImage} style={styles.socialIcon} />
+          </TouchableOpacity>
+        </View>
+        <Text style={{textAlign:'center', color:'gray', margin:10, marginBottom:20}}>or use your email</Text>
+        {/* Login Form */}
+        <TextInput 
+          placeholder="Email" 
+          value={email}
+          onChangeText={setEmail}
+          style={styles.input}
+          keyboardType='email-address'
+        />
+        <View style={styles.passwordContainer}>
+          <TextInput 
+            placeholder="Password" 
+            value={password}
+            onChangeText={setPassword}
+            style={styles.passwordInput}
+            secureTextEntry={!showPassword}
+          />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+            <Ionicons name={showPassword ? "eye" : "eye-off"} size={24} color="gray" />
+          </TouchableOpacity>
+      </View>
+
+        {/* Remember Me & Forgot Password */}
+        <View style={styles.optionsRow}>
+          <View style={styles.rememberMe}>
+            <TouchableOpacity onPress={() => setRememberMe(!rememberMe)}>
+              <Checkbox.Android status={rememberMe ? 'checked' : 'unchecked'} color="#009DA5" />
+            </TouchableOpacity>
+            <Text style={styles.rememberText}>Remember me</Text>
+          </View>
+          <TouchableOpacity onPress={() => router.push('/(auth)/forgotpassword')}>
+            <Text style={styles.forgotPassword}>Forgot Password?</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Login Button */}
+        <TouchableOpacity onPress={handleLogin} style={styles.button}>
+          <Text style={styles.buttonText}>LOGIN</Text>
+        </TouchableOpacity>
+
+        {/* Signup Option */}
+        <TouchableOpacity onPress={() => router.push('../signup')}>
+          <Text style={styles.signupText}>New to Yaakkai? <Text style={styles.signupLink}>Sign Up Now</Text></Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
+export default Login;
 
 const styles = StyleSheet.create({
-  container:{
-    flex:1,
-    justifyContent:'center',
-    alignItems:'center',
-    flexDirection:'column',
-    backgroundColor:'white'
+  container: {
+    flex: 1,
+    backgroundColor: '#009DA5',
   },
-  image:{
-    width:300,
-    height:300,
-    marginBottom:2,
+  topSection: {
+    flex: 2.0, 
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
   },
-  logintext:{
-    fontSize:22,
-    fontWeight:'bold',
-    color:'#525252',
-    marginBottom:20,
+  backButton: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
   },
-  input:{
-    width:'80%',
-    height:60,
-    borderWidth:1,
-    borderColor:'lightgrey',
-    borderRadius:20,
-    marginBottom:20,
-    paddingLeft:10,
-    fontSize:16,
-    shadowColor: '#000', 
-    shadowOffset: { width: 0, height: 2}, 
-    shadowOpacity: 0.2, 
-    shadowRadius: 2, 
+  image: {
+    marginTop: 60,
+    width: 280,
+    height: 280,
+    resizeMode: 'contain',
+    marginBottom: 20,
   },
-  button:{
-    width:'60%',
-    height:50,
-    justifyContent:'center',
-    alignItems:'center',
-    marginTop:10,
-    backgroundColor:'#009DA5',
-    borderRadius:20,
+  loginHeader: {
+    backgroundColor: '#EDEDED',
+    paddingVertical: 30,
+    alignItems: 'center',
+    borderTopStartRadius: 50,
+    borderTopEndRadius: 50,
+    height: 150,
   },
-  buttonText:{
-    color:"white",
-    fontSize:20,
-    fontWeight:'bold'
+  loginText: {
+    fontSize: 25,
+    fontWeight: 'bold',
+    color: '#525252',
   },
-  signuptext:{
-    marginTop:10,
-    fontSize:20,
+  bottomSection: {
+    flex: 3, 
+    backgroundColor: 'white',
+    borderTopLeftRadius: 50,
+    borderTopRightRadius: 50,
+    paddingVertical: 30,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    marginTop: -60, 
   },
-  signuplink:{
-    color:"#009DA5",
-    fontSize:20,
-    fontWeight:'bold'
+  socialIcons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
-  googleicon:{
-    marginTop:20,
-    height:27,
-    width:27
+  socialIcon: {
+    width: 40,
+    height: 40,
+    marginHorizontal: 10,
   },
-})
+  input: {
+    width: '90%',
+    height: 55,
+    borderWidth: 1,
+    borderColor: 'lightgrey',
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    fontSize: 16,
+    marginBottom: 15,
+    backgroundColor: '#f9f9f9',
+  },
+  optionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '90%',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '90%',
+    height: 55,
+    borderWidth: 1,
+    borderColor: 'lightgrey',
+    borderRadius: 20,
+    backgroundColor: '#f9f9f9',
+    marginBottom: 15,
+    paddingHorizontal: 15,
+  },
+  passwordInput: {
+    flex: 1,
+    fontSize: 16,
+  },
+  eyeIcon: {
+    padding: 10,
+  },
+  rememberMe: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rememberText: {
+    marginLeft: 5,
+    fontSize: 16,
+    color: '#525252',
+  },
+  forgotPassword: {
+    color: '#009DA5',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  button: {
+    width: '80%',
+    height: 50,
+    backgroundColor: '#009DA5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 25,
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    letterSpacing:2,
+  },
+  signupText: {
+    marginTop: 15,
+    fontSize: 16,
+  },
+  signupLink: {
+    color: "#009DA5",
+    fontWeight: 'bold',
+  },
+});
