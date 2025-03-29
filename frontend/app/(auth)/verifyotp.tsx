@@ -28,7 +28,7 @@ const VerifyOtp: React.FC = () => {
 
   const handleResendOtp = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:5000/auth/resend-otp', {
+      const response = await fetch('http://192.168.1.7:5000/auth/resend-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -47,7 +47,7 @@ const VerifyOtp: React.FC = () => {
       return;
     }
     try {
-      const response = await fetch('http://127.0.0.1:5000/auth/verify-otp', {
+      const response = await fetch('http://192.168.1.7:5000/auth/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp: enteredOtp }),

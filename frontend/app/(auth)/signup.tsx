@@ -22,7 +22,7 @@ const Signup: React.FC = () => {
     }
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/auth/signup', {
+      const response = await fetch('http://192.168.1.7:5000/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
@@ -33,12 +33,12 @@ const Signup: React.FC = () => {
       if (response.status === 201) {
         console.log('Signup successful', data.message);
         await AsyncStorage.setItem('access_token', data.access_token);
-        await AsyncStorage.setItem('refresh_token', data.refresh_token);
         router.push({ pathname: '../(auth)/verifyotp', params: { email } });
       } else {
         alert('Signup failed: ' + data.message);
       }
     } catch (error) {
+      console.error('Error during signup:', error);
       alert('An error occurred during signup');
     }
   };
@@ -145,17 +145,18 @@ const styles = StyleSheet.create({
   },
   image: {
     marginTop: 40,
-    width: 280,
-    height: 280,
+    width: 250,
+    height: 250,
     resizeMode: 'contain',
   },
   signupHeader: {
     backgroundColor: '#EDEDED',
-    paddingVertical: 30,
+    paddingTop:20,
+    paddingBottom:40,
     alignItems: 'center',
     borderTopStartRadius: 50,
     borderTopEndRadius: 50,
-    height: 150,
+    height: 120,
   },
   signupText: {
     fontSize: 25,
@@ -167,10 +168,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderTopLeftRadius: 50,
     borderTopRightRadius: 50,
-    paddingVertical: 30,
+    paddingVertical: 10,
     paddingHorizontal: 20,
     alignItems: 'center',
-    marginTop: -60, 
+    marginTop: -50, 
   },
   socialIcons: {
     flexDirection: 'row',

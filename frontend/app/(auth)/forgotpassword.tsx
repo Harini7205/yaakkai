@@ -18,7 +18,7 @@ const ForgotPassword: React.FC = () => {
     }
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/auth/reset-password', {
+      const response = await fetch('http://192.168.1.7:5000/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, 'new_password': password }),
@@ -82,6 +82,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+    marginBottom:60,
   },
   backButton: {
     position: 'absolute',
@@ -89,7 +90,7 @@ const styles = StyleSheet.create({
     left: 20,
   },
   image: {
-    marginTop: 60,
+    marginTop: 180,
     width: 280,
     height: 280,
     resizeMode: 'contain',
@@ -97,11 +98,12 @@ const styles = StyleSheet.create({
   },
   loginHeader: {
     backgroundColor: '#EDEDED',
-    paddingVertical: 30,
+    paddingTop: 20,
     alignItems: 'center',
     borderTopStartRadius: 50,
     borderTopEndRadius: 50,
-    height: 150,
+    height: 120,
+    marginTop:50,
   },
   loginText: {
     fontSize: 25,
@@ -116,7 +118,7 @@ const styles = StyleSheet.create({
     paddingVertical: 30,
     paddingHorizontal: 20,
     alignItems: 'center',
-    marginTop: -60,
+    marginTop: -50,
   },
   input: {
     width: '90%',
