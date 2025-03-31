@@ -5,8 +5,10 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons'; // For icons
 import signupImage from "@assets/images/signup-image.png";
 import googleLogoImage from "@assets/images/google-logo.png";
+import { useLanguage } from '../config/(lang)/LanguageContext';
 
 const Signup: React.FC = () => {
+  const { t } = useLanguage();
   const router = useRouter();
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
@@ -17,7 +19,7 @@ const Signup: React.FC = () => {
 
   const handleSignup = async () => {
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+      alert(t("passwords_do_not_match"));
       return;
     }
 
@@ -31,21 +33,20 @@ const Signup: React.FC = () => {
       const data = await response.json();
 
       if (response.status === 201) {
-        console.log('Signup successful', data.message);
+        console.log(t("signup_success"), data.message);
         await AsyncStorage.setItem('access_token', data.access_token);
         router.push({ pathname: '../(auth)/verifyotp', params: { email } });
       } else {
-        alert('Signup failed: ' + data.message);
+        alert(t("signup_failed") + data.message);
       }
     } catch (error) {
-      console.error('Error during signup:', error);
-      alert('An error occurred during signup');
+      console.error(t("signup_error"), error);
+      alert(t("signup_error_occurred"));
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* Top Section with Image & Back Button */}
       <View style={styles.topSection}>
         <TouchableOpacity onPress={() => router.push('/(auth)/langselection')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="white" />
@@ -53,40 +54,35 @@ const Signup: React.FC = () => {
         <Image source={signupImage} style={styles.image} />
       </View>
 
-      {/* Grey Background for Signup Header */}
       <View style={styles.signupHeader}>
-        <Text style={styles.signupText}>Create an account</Text>
+        <Text style={styles.signupText}>{t("create_account")}</Text>
       </View>
 
-      {/* Bottom Section with Form & Options */}
       <View style={styles.bottomSection}>
-        {/* Social Signup */}
         <View style={styles.socialIcons}>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={()=>router.push('/(auth)/signupusinggoogle')}>
             <Image source={googleLogoImage} style={styles.socialIcon} />
           </TouchableOpacity>
         </View>
-        <Text style={{ textAlign: 'center', color: 'gray', margin: 10, marginBottom: 20 }}>or sign up with email</Text>
+        <Text style={{ textAlign: 'center', color: 'gray', margin: 10, marginBottom: 20 }}>{t("or_signup_email")}</Text>
 
-        {/* Signup Form */}
         <TextInput 
-          placeholder="Full Name" 
+          placeholder={t("full_name")}
           value={name}
           onChangeText={setName}
           style={styles.input}
         />
         <TextInput 
-          placeholder="Email" 
+          placeholder={t("email")}
           value={email}
           onChangeText={setEmail}
           style={styles.input}
           keyboardType='email-address'
         />
-        
-        {/* Password Input with Toggle */}
+
         <View style={styles.passwordContainer}>
           <TextInput 
-            placeholder="Password" 
+            placeholder={t("password")}
             value={password}
             onChangeText={setPassword}
             style={styles.passwordInput}
@@ -97,10 +93,9 @@ const Signup: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Confirm Password Input with Toggle */}
         <View style={styles.passwordContainer}>
           <TextInput 
-            placeholder="Confirm Password" 
+            placeholder={t("confirm_password")}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             style={styles.passwordInput}
@@ -111,14 +106,8 @@ const Signup: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Signup Button */}
         <TouchableOpacity onPress={handleSignup} style={styles.button}>
-          <Text style={styles.buttonText}>SIGN UP</Text>
-        </TouchableOpacity>
-
-        {/* Already have an account? */}
-        <TouchableOpacity onPress={() => router.push('../login')}>
-          <Text style={styles.loginText}>Already have an account? <Text style={styles.loginLink}>Login</Text></Text>
+          <Text style={styles.buttonText}>{t("sign_up")}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -159,7 +148,7 @@ const styles = StyleSheet.create({
     height: 120,
   },
   signupText: {
-    fontSize: 25,
+    fontSize: 23,
     fontWeight: 'bold',
     color: '#525252',
   },
@@ -219,19 +208,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 25,
-    marginTop: 10,
   },
   buttonText: {
     color: 'white',
     fontSize: 18,
     letterSpacing: 2,
-  },
-  loginText: {
-    marginTop: 15,
-    fontSize: 16,
-  },
-  loginLink: {
-    color: "#009DA5",
-    fontWeight: 'bold',
   },
 });

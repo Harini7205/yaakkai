@@ -7,7 +7,7 @@
       "@/*": [
         "./*"
       ],
-      "@assets/*": ["assets/*"],
+      "@assets/*": ["assets/*"]
     }
   },
   "include": [
@@ -17,5 +17,6 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
     "assets.d.ts",
-  ]
+  ],
+  
 }

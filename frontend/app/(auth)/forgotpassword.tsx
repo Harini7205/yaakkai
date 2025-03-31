@@ -2,10 +2,13 @@ import { View, TouchableOpacity, Text, StyleSheet, TextInput, Image } from 'reac
 import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useLanguage } from '../config/(lang)/LanguageContext';
 import resetPasswordImage from "@assets/images/forgot-password.png";
 
 const ForgotPassword: React.FC = () => {
   const router = useRouter();
+  const { t } = useLanguage();
+  
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
@@ -13,7 +16,7 @@ const ForgotPassword: React.FC = () => {
 
   const handleResetPassword = async () => {
     if (password !== confirmPassword) {
-      alert("Passwords do not match");
+      alert(t("passwords_do_not_match"));
       return;
     }
 
@@ -27,13 +30,13 @@ const ForgotPassword: React.FC = () => {
       const data = await response.json();
 
       if (response.status === 200) {
-        alert("Password reset successful");
+        alert(t("reset_success"));
         router.push('/(auth)/login');
       } else {
-        alert("Reset failed: " + data.message);
+        alert(t("reset_failed") + data.message);
       }
     } catch (error) {
-      alert("An error occurred");
+      alert(t("reset_error"));
     }
   };
 
@@ -46,24 +49,24 @@ const ForgotPassword: React.FC = () => {
         <Image source={resetPasswordImage} style={styles.image} />
       </View>
       <View style={styles.loginHeader}>
-        <Text style={styles.loginText}>Reset Your Password</Text>
+        <Text style={styles.loginText}>{t("reset_password")}</Text>
       </View>
       <View style={styles.bottomSection}>
-        <TextInput placeholder="Email" value={email} onChangeText={setEmail} style={styles.input} keyboardType='email-address' />
+        <TextInput placeholder={t("email")} value={email} onChangeText={setEmail} style={styles.input} keyboardType='email-address' />
         <View style={styles.passwordContainer}>
-          <TextInput placeholder="New Password" value={password} onChangeText={setPassword} style={styles.passwordInput} secureTextEntry={!showPassword} />
+          <TextInput placeholder={t("new_password")} value={password} onChangeText={setPassword} style={styles.passwordInput} secureTextEntry={!showPassword} />
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
             <Ionicons name={showPassword ? "eye" : "eye-off"} size={24} color="gray" />
           </TouchableOpacity>
         </View>
         <View style={styles.passwordContainer}>
-          <TextInput placeholder="Confirm Password" value={confirmPassword} onChangeText={setConfirmPassword} style={styles.passwordInput} secureTextEntry={!showPassword} />
+          <TextInput placeholder={t("confirm_password")} value={confirmPassword} onChangeText={setConfirmPassword} style={styles.passwordInput} secureTextEntry={!showPassword} />
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
             <Ionicons name={showPassword ? "eye" : "eye-off"} size={24} color="gray" />
           </TouchableOpacity>
         </View>
         <TouchableOpacity onPress={handleResetPassword} style={styles.button}>
-          <Text style={styles.buttonText}>RESET PASSWORD</Text>
+          <Text style={styles.buttonText}>{t("reset_password_button")}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -164,5 +167,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     letterSpacing: 2,
+    textAlign:"center",
   },
 });

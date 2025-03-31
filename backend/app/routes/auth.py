@@ -137,8 +137,8 @@ def login():
     expires_access = datetime.timedelta(hours=1)
     expires_refresh = datetime.timedelta(days=7 if remember_me else 1)
 
-    access_token = create_access_token(identity=str(user.id), expires_delta=expires_access)
-    refresh_token = create_refresh_token(identity=str(user.id), expires_delta=expires_refresh)
+    access_token = create_access_token(identity=user.email, expires_delta=expires_access)
+    refresh_token = create_refresh_token(identity=user.email, expires_delta=expires_refresh)
 
     # Store refresh token securely in HTTP-only cookie
     response = make_response(jsonify({

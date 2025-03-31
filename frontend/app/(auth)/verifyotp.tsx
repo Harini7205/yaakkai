@@ -2,9 +2,11 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image } from 'reac
 import React, { useState, useRef } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons'; 
-import verifyOtpImage from "@assets/images/verify-otp.png"; 
+import verifyOtpImage from "@assets/images/verify-otp.png";
+import { useLanguage } from "../config/(lang)/LanguageContext";
 
 const VerifyOtp: React.FC = () => {
+  const { t } = useLanguage();
   const router = useRouter();
   const params = useLocalSearchParams();
   const email = params.email as string;
@@ -34,16 +36,16 @@ const VerifyOtp: React.FC = () => {
         body: JSON.stringify({ email }),
       });
       const data = await response.json();
-      alert(response.status === 200 ? 'A new OTP has been sent to your email.' : 'Failed to resend OTP: ' + data.message);
+      alert(response.status === 200 ? t("otp_sent") : t("otp_failed") + data.message);
     } catch (error) {
-      alert('An error occurred while resending OTP.');
+      alert(t("otp_resend_error"));
     }
   };
 
   const handleOtpVerification = async () => {
     const enteredOtp = otp.join("");
     if (enteredOtp.length !== 6) {
-      alert("Please enter a valid 6-digit OTP.");
+      alert(t("invalid_otp"));
       return;
     }
     try {
@@ -54,13 +56,13 @@ const VerifyOtp: React.FC = () => {
       });
       const data = await response.json();
       if (response.status === 200) {
-        alert('OTP verified successfully');
-        router.push('/(main)/home');
+        alert(t("otp_verified"));
+        router.push('/(main)/welcome');
       } else {
-        alert('OTP verification failed: ' + data.message);
+        alert(t("otp_verification_failed") + data.message);
       }
     } catch (error) {
-      alert('An error occurred during OTP verification');
+      alert(t("otp_verification_error"));
     }
   };
 
@@ -74,8 +76,8 @@ const VerifyOtp: React.FC = () => {
       </View>
 
       <View style={styles.contentSection}>
-        <Text style={styles.otpText}>Enter Verification Code</Text>
-        <Text style={styles.subText}>An OTP of 6 digits has been send to email {email}</Text>
+        <Text style={styles.otpText}>{t("enter_verification_code")}</Text>
+        <Text style={styles.subText}>{t("otp_sent_to")} {email}</Text>
 
         <View style={styles.otpContainer}>
           {otp.map((digit, index) => (
@@ -94,11 +96,11 @@ const VerifyOtp: React.FC = () => {
         </View>
 
         <TouchableOpacity onPress={handleOtpVerification} style={styles.button}>
-          <Text style={styles.buttonText}>VERIFY OTP</Text>
+          <Text style={styles.buttonText}>{t("verify_otp")}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={handleResendOtp}>
-          <Text style={styles.resendLink}>Didn't receive an OTP? Resend</Text>
+          <Text style={styles.resendLink}>{t("resend_otp")}</Text>
         </TouchableOpacity>
       </View>
     </View>

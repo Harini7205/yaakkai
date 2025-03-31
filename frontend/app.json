@@ -23,10 +23,26 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "CLIENT_ID": "371699386242-t86ge7tkcmg07cc13ni7ek6ltab29rbu.apps.googleusercontent.com",
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "2d56f5b1-9936-45b6-ab2e-72cc08147b07"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/2d56f5b1-9936-45b6-ab2e-72cc08147b07"
     }
   }
 }

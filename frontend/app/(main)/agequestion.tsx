@@ -1,46 +1,69 @@
-import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
-import Slider from '@react-native-community/slider';
-import age18 from "@assets/images/age18.png"; 
-import age30 from "@assets/images/age30.png";
-import age50 from "@assets/images/age50.png";
-import age65 from "@assets/images/age65.png";
-import age80 from "@assets/images/age80.png"; 
+import React, { useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import WheelPickerExpo from "react-native-wheel-picker-expo";
+import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-interface AgeQuestionPageProps {
-  onNext: (data: { age: number }) => void;
-}
+const AgePickerScreen = () => {
+  const router = useRouter();
+  const [selectedAge, setSelectedAge] = useState(19);
 
-const AgeQuestionPage: React.FC<AgeQuestionPageProps> = ({ onNext }) => {
-  const [age, setAge] = useState(18);
+  const updateAgeInBackend = async (age: number) => {
+    try {
+      const token = await AsyncStorage.getItem("access_token"); // Retrieve JWT from storage
+      if (!token) {
+        Alert.alert("Error", "You are not logged in.");
+        return;
+      }
+      console.log(token);
+      const response = await fetch("http://192.168.1.7:5000/update-age", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Send token for authentication
+        },
+        body: JSON.stringify({ age }),
+      });
 
-  const getImageForAge = (age: number) => {
-    if (age <= 25) return age18;
-    if (age <= 45) return age30;
-    if (age <= 65) return age50;
-    if (age <= 75) return age65;
-    return age80;
+      const result = await response.json();
+
+      if (response.ok) {
+        setSelectedAge(age);
+        Alert.alert("Success", "Age updated successfully!");
+      } else {
+        Alert.alert("Error", result.message || "Failed to update age.");
+      }
+    } catch (error) {
+      console.error("Update Age Error:", error);
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Your Health Survey</Text>
-      <View style={styles.progressBarContainer}>
-        <View style={[styles.progressBar, { width: `${(age - 18) / 62 * 100}%` }]} />
-      </View>
-      <Text style={styles.question}>What is your age?</Text>
-      <View style={styles.content}>
-        <Image source={getImageForAge(age)} style={styles.image} />
-        <Slider
-          style={styles.slider}
-          minimumValue={18}
-          maximumValue={80}
-          value={age}
-          onValueChange={setAge}
-        />
-      </View>
-      <TouchableOpacity style={styles.nextButton} onPress={() => onNext({ age })}>
-        <Text style={styles.nextButtonText}>Next</Text>
+      <Text style={styles.title}>Please tell us your current age</Text>
+
+      <WheelPickerExpo
+        items={Array.from({ length: 100 }, (_, i) => ({
+          label: `${i + 1}`,
+          value: i + 1,
+        }))}
+        initialSelectedIndex={selectedAge - 1}
+        onChange={({ item }) => setSelectedAge(item.value)}
+        height={350}
+        width={400}
+        backgroundColor="#FFFFFF"
+      />
+
+      <Text style={{ fontSize: 22, marginBottom: 10 }}>
+        Selected Age: {selectedAge}
+      </Text>
+
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => {updateAgeInBackend(selectedAge),router.push("/genderquestion")}}
+      >
+        <Text style={styles.buttonText}>Continue →</Text>
       </TouchableOpacity>
     </View>
   );
@@ -49,52 +72,29 @@ const AgeQuestionPage: React.FC<AgeQuestionPageProps> = ({ onNext }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    justifyContent: 'space-around',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    paddingHorizontal: 40,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontSize: 32,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginTop: 30,
   },
-  progressBarContainer: {
-    width: '100%',
-    height: 10,
-    backgroundColor: '#d1c4e9',
-    borderRadius: 5,
+  button: {
+    marginTop: 20,
+    backgroundColor: "#009DA5",
+    paddingVertical: 18,
+    paddingHorizontal: 50,
+    borderRadius: 30,
   },
-  progressBar: {
-    height: '100%',
-    backgroundColor: '#42a5f5',
-    borderRadius: 5,
-  },
-  question: {
+  buttonText: {
+    color: "#fff",
     fontSize: 20,
-    textAlign: 'center',
-  },
-  content: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  image: {
-    width: 150,
-    height: 200,
-    resizeMode: 'contain',
-  },
-  slider: {
-    width: '50%',
-  },
-  nextButton: {
-    backgroundColor: '#42a5f5',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  nextButtonText: {
-    color: 'white',
-    fontSize: 18,
+    fontWeight: "bold",
   },
 });
 
-export default AgeQuestionPage;
+export default AgePickerScreen;

@@ -1,31 +1,29 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, ImageBackground, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useLanguage, Language } from '../config/(lang)/LanguageContext';
 import tamilbg from '@assets/images/tamilbg.jpg';
 import englishbackground from '@assets/images/englishbackground.jpeg';
 
 const LanguageSelection: React.FC = () => {
   const router = useRouter();
-  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
+  const { language, setLanguage, t } = useLanguage();
 
-  const handleLanguageSelection = (language: string) => {
-    setSelectedLanguage(language);
+  const handleLanguageSelection = (lang: Language) => {
+    setLanguage(lang);
   };
 
   const handleContinue = () => {
-    if (selectedLanguage) {
-      console.log(`Selected language: ${selectedLanguage}`);
-      router.push('/login'); // Navigate to Login Screen
-    }
+    router.push('/login');
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Select Language</Text>
+      <Text style={styles.title}>{t('selectLanguage')}</Text>
 
       <TouchableOpacity 
         onPress={() => handleLanguageSelection('en')} 
-        style={[styles.languageBox, selectedLanguage === 'en' && styles.selectedBox]}
+        style={[styles.languageBox, language === 'en' && styles.selectedBox]}
       >
         <ImageBackground source={englishbackground} style={styles.imageBackground} imageStyle={styles.imageStyle}>
           <Text style={styles.languageText}>English</Text>
@@ -34,7 +32,7 @@ const LanguageSelection: React.FC = () => {
 
       <TouchableOpacity 
         onPress={() => handleLanguageSelection('ta')} 
-        style={[styles.languageBox, selectedLanguage === 'ta' && styles.selectedBox]}
+        style={[styles.languageBox, language === 'ta' && styles.selectedBox]}
       >
         <ImageBackground source={tamilbg} style={styles.imageBackground} imageStyle={styles.imageStyle}>
           <Text style={styles.languageText}>தமிழ்</Text>
@@ -43,10 +41,10 @@ const LanguageSelection: React.FC = () => {
 
       <TouchableOpacity 
         onPress={handleContinue} 
-        style={[styles.continueButton, !selectedLanguage && styles.disabledButton]} 
-        disabled={!selectedLanguage}
+        style={[styles.continueButton, !language && styles.disabledButton]} 
+        disabled={!language}
       >
-        <Text style={styles.continueText}>Continue</Text>
+        <Text style={styles.continueText}>{t('continue')}</Text>
       </TouchableOpacity>
     </View>
   );

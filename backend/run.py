@@ -2,6 +2,7 @@ from app import create_app
 from app.database.db import db
 
 app = create_app()
+app.secret_key = "your-secret-key"
 
 with app.app_context():
     db.create_all()

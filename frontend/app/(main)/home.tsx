@@ -1,135 +1,152 @@
-import { View, TouchableOpacity, Text, StyleSheet, Image } from 'react-native';
-import React from 'react';
-import heartImage from '@assets/images/heart.png';
-import { useRouter } from 'expo-router';
-import BottomNav from './bottomNav';
+import React, { useState, useEffect } from "react";
+import { View, Text, Image, TouchableOpacity, ScrollView, Linking, ActivityIndicator, Alert } from "react-native";
+import { FontAwesome5 } from "@expo/vector-icons";
+import TestScoreCard from "./testscorecard";
+import HealthCards from "./healthstatus";
+import BottomNavBar from "./bottomnavigationbar";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const Home: React.FC = () => {
-  const router = useRouter();
+const HomePage = () => {
+  const [darkMode, setDarkMode] = useState(false);
+  const [healthTip, setHealthTip] = useState("");
+  const [youtubeResources, setYoutubeResources] = useState<{ url: string; thumbnail: string; title: string }[]>([]);
+  const [loadingHealthTip, setLoadingHealthTip] = useState(true);
+  const [loadingYouTube, setLoadingYouTube] = useState(true);
+  const [loadingTestResult, setLoadingTestResult] = useState(true);
+
+  // State variables for fetched test data
+  const [testResult, setTestResult] = useState("N/A");
+  const [testDate, setTestDate] = useState("N/A");
+  const [bloodPressure, setBloodPressure] = useState("N/A");
+  const [heartRate, setHeartRate] = useState("N/A");
+  const [username, setUserName]= useState("N/A");
+
+  useEffect(() => {
+    fetchLatestTestResult();
+    fetchHealthTip();
+    fetchYouTubeResources();
+  }, []);
+
+  // Fetch latest test result from API
+  const fetchLatestTestResult = async () => {
+    try {
+      const token = await AsyncStorage.getItem("access_token");
+      if (!token) {
+        Alert.alert("Error", "You are not logged in.");
+        return;
+      }
+      const response = await fetch("http://192.168.1.7:5000/latest-test-result",{
+        method:'GET',
+        headers:{
+          Authorization: `Bearer ${token}`,
+        }
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        setTestResult(data.test_result || "N/A");
+        setTestDate(data.test_taken_at || "N/A");
+        setBloodPressure(data.bloodpressure || "N/A");
+        setHeartRate(data.heartrate || "N/A");
+        setUserName(data.username || "N/A");
+      } else {
+        console.error("Error fetching test result:", data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching test result:", error);
+    } finally {
+      setLoadingTestResult(false);
+    }
+  };
+
+  const fetchHealthTip = () => {
+    const tips = [
+      "🥦 Eat fiber-rich foods like spinach and oats to lower bad cholesterol and stabilize blood pressure.",
+      "🍎 Include Omega-3-rich foods like salmon and walnuts to prevent irregular heartbeats and lower triglycerides.",
+      "🏃‍♂️ Regular exercise like walking or cycling strengthens the heart and improves circulation."
+    ];
+    setTimeout(() => {
+      setHealthTip(tips[Math.floor(Math.random() * tips.length)]);
+      setLoadingHealthTip(false);
+    }, 1000);
+  };
+
+  const fetchYouTubeResources = async () => {
+    try {
+      const response = await fetch("http://192.168.1.7:5000/youtube-resources");
+      const data = await response.json();
+      setYoutubeResources(data.resources || []);
+    } catch (error) {
+      console.error("Error fetching YouTube resources:", error);
+    } finally {
+      setLoadingYouTube(false);
+    }
+  };
+
   return (
-    <View style={styles.outer}>
-    <View style={styles.container}>
-      <Text style={styles.heading}>Welcome to Yaakkai</Text>
-      <Image source={heartImage} style={styles.image} />
-      
-      <View style={styles.mottoContainer}>
-        <Text style={styles.mottoTitle}>OUR MOTTO</Text>
-        <Text style={styles.mottoText}>மருந்தென வேண்டாவாம் யாக்கைக்கு அருந்தியது</Text>
-        <Text style={styles.mottoText}>அற்றது போற்றி உணி</Text>
-        <Text style={styles.explanationTitle}>EXPLANATION:</Text>
-        <Text style={styles.explanationText}>
-          One should not seek medicine for a disease that can be cured by self-discipline;
-          The remedy lies in avoiding excess, which is the true cure for illness.
-        </Text>
+    <View style={{ flex: 1, backgroundColor: darkMode ? "#121212" : "white"}}>
+      <ScrollView 
+        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingVertical: 60 }} 
+        keyboardShouldPersistTaps="handled"
+      >
+      {/* Header */}
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+        <View>
+          <Text style={{ fontSize: 22, fontWeight: "bold", color: darkMode ? "#fff" : "black" }}>Hello, {username}!</Text>
+          <Text style={{ fontSize: 16, color: darkMode ? "#aaa" : "#333" }}>How are you doing?</Text>
+        </View>
+        <TouchableOpacity onPress={() => setDarkMode(!darkMode)}>
+          <FontAwesome5 name={darkMode ? "moon" : "sun"} size={24} color="#009DA5" solid />
+        </TouchableOpacity>
       </View>
 
-      <Text style={styles.subHeading}>
-        Answer a few questions to know your risk level for cardiovascular disease.
-      </Text>
+      {/* Health Metrics Section */}
+      <HealthCards isDarkMode={darkMode} bloodpressure={bloodPressure} heartrate={heartRate}/>
 
-      <TouchableOpacity onPress={() => router.push('../assessment')} style={styles.button}>
-        <Text style={styles.buttonText}>Take a New Assessment</Text>
-      </TouchableOpacity>
-    </View>
-    <BottomNav />
+      {/* Test Result Section */}
+      {loadingTestResult ? (
+        <ActivityIndicator size="large" color="#009DA5" style={{ marginVertical: 20 }} />
+      ) : (
+        <TestScoreCard 
+          testResult={
+            ["Low", "Moderate", "High", "Very High"].includes(testResult) 
+              ? (testResult as "Low" | "Moderate" | "High" | "Very High") 
+              : "Low"
+          } 
+          testDate={testDate} 
+        />
+      )}
+
+      {/* Health Tip Section */}
+      <View style={{ backgroundColor: darkMode ? "#121212" : "#fff", padding: 15, borderRadius: 10, marginVertical: 15, borderWidth: 1, borderColor: darkMode ? "#fff" : "#333" }}>
+        <Text style={{ fontSize: 16, fontWeight: "bold", marginBottom: 10, color: darkMode ? "#fff" : "#333" }}>Health Tip of the Day</Text>
+        {loadingHealthTip ? (
+          <ActivityIndicator size="small" color="#009DA5" />
+        ) : (
+          <Text style={{ color: darkMode ? "#fff" : "#333" }}>{healthTip}</Text>
+        )}
+      </View>
+
+      {/* YouTube Resources Section */}
+      <Text style={{ fontSize: 22, fontWeight: "bold", marginBottom: 10, color: darkMode ? "#fff" : "#333" }}>Related YouTube Resources</Text>
+      {loadingYouTube ? (
+        <ActivityIndicator size="large" color="#009DA5" style={{ marginVertical: 20 }} />
+      ) : (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 15, marginBottom:40 }}>
+          {youtubeResources.map((video, index) => (
+            <TouchableOpacity key={index} onPress={() => Linking.openURL(video.url)} style={{ marginRight: 15 }}>
+              <Image source={{ uri: video.thumbnail }} style={{ width: 180, height: 100, borderRadius: 10 }} />
+              <Text style={{ width: 180, fontSize: 12, textAlign: "center", marginTop: 5, color: darkMode ? "#fff" : "#333" }} numberOfLines={2}>{video.title}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
+      </ScrollView>
+
+      {/* Bottom Navigation Bar */}
+      <BottomNavBar />
     </View>
   );
 };
 
-export default Home;
-
-const styles = StyleSheet.create({
-  outer:{
-    flex:1,
-    width:'100%',
-  },
-  container: {
-    flex: 1,
-    justifyContent:'center',
-    alignItems: 'center',
-    backgroundColor: 'white',
-    paddingHorizontal: 20,
-    width:'100%'
-  },
-  welcomeText: {
-    fontSize: 22,
-    alignSelf:'flex-start',
-    fontWeight: 'bold',
-    color: '#525252',
-    marginBottom: 5,
-  },
-  subText: {
-    fontSize: 16,
-    alignSelf:'flex-start',
-    color: '#7a7a7a',
-    marginBottom: 20,
-  },
-  mottoContainer: {
-    backgroundColor: '#009DA5',
-    borderRadius:20,
-    padding: 15,
-    width: '100%',
-    marginBottom: 20,
-  },
-  mottoTitle: {
-    color: 'white',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 5,
-  },
-  mottoText: {
-    color: 'white',
-    width:'100%',
-    fontSize:13,
-    textAlign: 'left',
-  },
-  explanationTitle: {
-    marginTop: 10,
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  explanationText: {
-    marginTop: 10,
-    color: 'white',
-  },
-  image: {
-    width: 250,
-    height: 250,
-    marginBottom: 20,
-  },
-  heading: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  subHeading: {
-    fontSize: 16,
-    textAlign: 'center',
-    color: 'black',
-    marginBottom: 20,
-  },
-  button: {
-    backgroundColor: '#009DA5',
-    borderRadius: 20,
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    shadowColor: '#000', 
-    shadowOffset: { width: 0, height: 4 }, 
-    shadowOpacity: 0.3, 
-    shadowRadius: 4, 
-    elevation: 5,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  disclaimer: {
-    marginTop:30,
-    fontSize: 16,
-    textAlign: 'justify',
-    color: '#7a7a7a',
-    marginBottom: 20,
-  }
-});
+export default HomePage;
