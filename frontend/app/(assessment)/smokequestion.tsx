@@ -41,7 +41,7 @@ const RatingScreen = () => {
   };
 
   return (
-    <ScrollView style={{ height: "100%", backgroundColor: "#fff" }} contentContainerStyle={{justifyContent:'center'}}>
+      <ScrollView contentContainerStyle={{height:"100%",backgroundColor:"#fff"}}>
       <View style={styles.container}>
         {/* Progress bar section */}
         <ProgressBarCustom progress={1/12} />
@@ -102,7 +102,7 @@ const RatingScreen = () => {
           <Text style={styles.continueText}>Continue →</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+      </ScrollView>
   );
 };
 
@@ -111,20 +111,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingHorizontal: 40,
-    paddingTop: 30,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   questionText: {
-    marginVertical: 20,
     fontSize: 30,
     fontWeight: 'bold',
     textAlign: 'center',
   },
   image: {
     width: '100%',
-    height: 300,
+    height: 200,
     resizeMode: 'contain',
-    marginVertical: 10,
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -189,6 +187,8 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
   },
+  
 });
+
 
 export default RatingScreen;

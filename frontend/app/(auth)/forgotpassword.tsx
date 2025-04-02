@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '../config/(lang)/LanguageContext';
 import resetPasswordImage from "@assets/images/forgot-password.png";
+import {BACKEND_URL} from '../config';
 
 const ForgotPassword: React.FC = () => {
   const router = useRouter();
@@ -21,7 +22,7 @@ const ForgotPassword: React.FC = () => {
     }
 
     try {
-      const response = await fetch('http://192.168.1.7:5000/auth/reset-password', {
+      const response = await fetch(`${BACKEND_URL}/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, 'new_password': password }),

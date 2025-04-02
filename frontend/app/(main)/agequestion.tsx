@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import WheelPickerExpo from "react-native-wheel-picker-expo";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {BACKEND_URL} from "../config";
 
 const AgePickerScreen = () => {
   const router = useRouter();
@@ -16,7 +17,7 @@ const AgePickerScreen = () => {
         return;
       }
       console.log(token);
-      const response = await fetch("http://192.168.1.7:5000/update-age", {
+      const response = await fetch(`${BACKEND_URL}/update-age`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

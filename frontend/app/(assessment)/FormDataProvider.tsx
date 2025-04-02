@@ -3,16 +3,16 @@ import React, { createContext, useState, useContext, ReactNode } from 'react';
 // Define the type for form data
 interface FormData {
   hypertension: string | null;
-  diabetes:string|null;
+  diabetes:string|"No";
   cigarettes_per_day:number|0;
   sedentary_hours: number | 0;
   sleep_hours: number | 0;
   social_connectedness: number | null;
-  chest_pain: string |null;
-  shortness_of_breath:string|null;
-  dizziness:string|null;
-  swelling:string|null;
-  irregular_heartbeat:string|null;
+  chest_pain: string |"No";
+  shortness_of_breath:string|"No";
+  dizziness:string|"No";
+  swelling:string|"No";
+  irregular_heartbeat:string|"No";
   smoking_status:string|null;
 }
 
@@ -26,16 +26,16 @@ const FormDataContext = createContext<{
 export const FormDataProvider = ({ children }: { children: ReactNode }) => {
   const [formData, setFormData] = useState<FormData>({
   hypertension: null,
-  diabetes:null,
+  diabetes:"No",
   cigarettes_per_day:0,
   sedentary_hours: 0,
   sleep_hours: 0,
   social_connectedness:  null,
-  chest_pain: null,
-  shortness_of_breath:null,
-  dizziness:null,
-  swelling:null,
-  irregular_heartbeat:null,
+  chest_pain: "No",
+  shortness_of_breath:"No",
+  dizziness:"No",
+  swelling:"No",
+  irregular_heartbeat:"No",
   smoking_status:null,
   });
 

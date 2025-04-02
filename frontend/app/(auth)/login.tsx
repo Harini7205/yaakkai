@@ -7,6 +7,7 @@ import loginImage from "@assets/images/login-image.png";
 import googleLogoImage from "@assets/images/google-logo.png";
 import { Checkbox } from 'react-native-paper';
 import { useLanguage } from '../config/(lang)/LanguageContext';
+import {BACKEND_URL} from "../config"; 
 
 type TranslationKeys = "login_title" | "login_subtitle" | "email" | "password" | "remember_me" | "forgot_password" | "login_button" | "signup_prompt" | "signup_link" | "or_use_email" | "signup_now";
 
@@ -35,7 +36,7 @@ const Login: React.FC = () => {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch('http://192.168.1.7:5000/auth/login', {
+      const response = await fetch(`${BACKEND_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

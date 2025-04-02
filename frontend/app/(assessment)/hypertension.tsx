@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { ScrollView, View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import ProgressBarCustom from './progressbar';
 import { useRouter } from 'expo-router';
 import { useFormData } from './FormDataProvider';
@@ -26,6 +26,7 @@ const RatingScreen = () => {
   };
 
   return (
+    <ScrollView contentContainerStyle={{backgroundColor:"100%", height:"100%"}}>
     <View style={styles.container}>
       {/* Progress bar section */}
       <ProgressBarCustom progress={3 / 12} />
@@ -97,6 +98,7 @@ const RatingScreen = () => {
         <Text style={styles.continueText}>Continue →</Text>
       </TouchableOpacity>
     </View>
+    </ScrollView>
   );
 };
 
@@ -105,20 +107,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingHorizontal: 40,
-    paddingTop: 30,
     alignItems: 'center',
+    justifyContent:"center"
   },
   questionText: {
-    marginVertical: 20,
     fontSize: 30,
     fontWeight: 'bold',
     textAlign: 'center',
+    marginBottom:10,
   },
   image: {
     width: '100%',
-    height: 300,
+    height: 200,
     resizeMode: 'contain',
-    marginVertical: 10,
   },
   yesNoContainer: {
     flexDirection: 'row',

@@ -39,6 +39,28 @@
     "invalid_otp": "Please enter a valid 6-digit OTP.",
     "otp_verified": "OTP verified successfully!",
     "otp_verification_failed": "OTP verification failed: ",
-    "otp_verification_error": "An error occurred while verifying OTP."
+    "otp_verification_error": "An error occurred while verifying OTP.",
+      "greeting": "Hello, ",
+      "question": "How are you doing?",
+      "health_tip_title": "Health Tip of the Day",
+      "test_result_title": "Your Latest Test Result",
+      "youtube_resources": "Related YouTube Resources",
+      "health_tips": {
+        "1": "🥦 Eat fiber-rich foods like spinach and oats to lower bad cholesterol and stabilize blood pressure.",
+        "2": "🍎 Include Omega-3-rich foods like salmon and walnuts to prevent irregular heartbeats and lower triglycerides.",
+        "3": "🏃‍♂️ Regular exercise like walking or cycling strengthens the heart and improves circulation."
+      },
+      "error_login": "You are not logged in.",
+      "error_fetching_data": "Error fetching test result:",
+      "loading": "Loading...",
+      "dark_mode": "Dark Mode",
+      "light_mode": "Light Mode",
+        "your_latest_test_score": "Your latest test score is:",
+        "Low": "Low",
+        "Moderate": "Moderate",
+        "High": "High",
+        "Very High": "Very High",
+        "test_taken_on": "Test taken on:"
+      
   }
   

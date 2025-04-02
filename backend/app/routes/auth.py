@@ -68,9 +68,9 @@ def send_otp_email(email, otp):
     msg.body = f"Your OTP code is {otp}. It expires in 5 minutes."
     try:
         mail.send(msg)
-        print(f"✅ OTP sent to {email}")
+        print(f"OTP sent to {email}")
     except Exception as e:
-        print(f"❌ Error sending OTP: {str(e)}")
+        print(f"Error sending OTP: {str(e)}")
 
 # ✅ RESEND OTP
 @auth_routes.route('/resend-otp', methods=['POST'])

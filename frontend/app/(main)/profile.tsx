@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet} from 'react-native';
+import { ScrollView, View, Text, Image, TouchableOpacity, StyleSheet} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import BottomNav from './bottomNav';
+import { BACKEND_URL } from '../config';
+import BottomNavBar from './bottomnavigationbar';
 
 const Profile = () => {
   const router = useRouter();
@@ -50,7 +51,7 @@ const Profile = () => {
           return;
         }
   
-        let response = await fetch('http://127.0.0.1:5000/auth/profile', {
+        let response = await fetch(`${BACKEND_URL}/profile`, {
           method: 'GET',
           headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         });
@@ -68,7 +69,7 @@ const Profile = () => {
           }
   
           // Retry fetching profile with the new token
-          response = await fetch('http://127.0.0.1:5000/auth/profile', {
+          response = await fetch(`${BACKEND_URL}/profile`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
           });
@@ -96,7 +97,7 @@ const Profile = () => {
     );
   }
 
-  const profilePic = userData.gender === 'female'
+  const profilePic = userData.gender === 'Female'
     ? require('@/assets/images/female-icon.png')
     : require('@/assets/images/male-icon.png');
 
@@ -111,12 +112,8 @@ const Profile = () => {
   };
 
   return (
-    <View style={styles.outer}>
+    <ScrollView contentContainerStyle={styles.outer}>
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <AntDesign name='arrowleft' color='black' size={20} />
-      </TouchableOpacity>
-
       <View>
         <View style={styles.profileSection}>
           <Image source={profilePic} style={styles.profilePic} />
@@ -150,14 +147,6 @@ const Profile = () => {
           <Text style={styles.optionText}>{'>'}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.option} onPress={() => router.push('/home')}>
-          <Text style={styles.optionText}>Change Password</Text>
-          <Text style={styles.optionText}>{'>'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.option} onPress={() => router.push('/home')}>
-          <Text style={styles.optionText}>Support</Text>
-          <Text style={styles.optionText}>{'>'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.option} onPress={() => router.push('/home')}>
           <Text style={styles.optionText}>Settings</Text>
           <Text style={styles.optionText}>{'>'}</Text>
         </TouchableOpacity>
@@ -173,27 +162,21 @@ const Profile = () => {
 
       {/* Bottom Navigation */}
       </View>
-      <BottomNav />
-    </View>
+      <BottomNavBar />
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   outer:{
     flex:1,
-    width:'100%',
+    height:'100%',
+    paddingBottom:80,
+    backgroundColor:"#fff"
   },
   container: {
-    padding: 20,
-  },
-  backButton: {
-    marginTop: 20,
-    padding: 10,
-    alignSelf: 'flex-start',
-  },
-  backButtonText: {
-    fontSize: 24,
-    color: '#0098A5',
+    padding:20,
+    paddingTop:50,
   },
   profileSection: {
     flexDirection: 'column',
@@ -228,6 +211,7 @@ const styles = StyleSheet.create({
   cardColumn: {
     flex: 1,
     alignItems: 'center',
+    justifyContent:"center"
   },
   columnWithBorder: {
     borderRightWidth: 1,
@@ -236,6 +220,7 @@ const styles = StyleSheet.create({
   cardLabel: {
     color: 'white',
     fontSize: 14,
+    textAlign:"center"
   },
   cardData: {
     color: 'white',

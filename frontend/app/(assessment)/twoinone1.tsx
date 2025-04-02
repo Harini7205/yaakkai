@@ -1,97 +1,109 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { FontAwesome5 } from "@expo/vector-icons";
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, Switch, TouchableOpacity, ScrollView } from "react-native";
 import ProgressBarCustom from "./progressbar";
 import { useRouter } from "expo-router";
-import { useFormData } from './FormDataProvider'; // Assuming useFormData is available for managing form data
+import { useFormData } from "./FormDataProvider";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BACKEND_URL } from "../config";
 
 const FirstSelectionScreen = () => {
   const { formData, updateFormData } = useFormData();
-  const [selectedOption1, setSelectedOption] = useState<"Yes" | "No" | null>(null);
-  const [selectedOption2, setSelectedOption2] = useState<"Yes" | "No" | null>(null);
+  const [chestPain, setChestPain] = useState(false);
+  const [shortnessOfBreath, setShortnessOfBreath] = useState(false);
+  const [dizziness, setDizziness] = useState(false);
+  const [swelling, setSwelling] = useState(false);
+  const [diabetes, setDiabetes] = useState(false);
+  const [irregularHeartbeat, setIrregularHeartbeat] = useState(false);
   const router = useRouter();
-   // Access updateFormData from the provider
 
-  const handleSelection = (option: "Yes" | "No", type: string) => {
-    if (type === "chest_pain") {
-      setSelectedOption(option);
-      console.log(option,selectedOption1);
-      updateFormData({ chest_pain: option }); // Update formData with chest_pain
-    } else if (type === "shortness_of_breath") {
-      setSelectedOption2(option);
-      updateFormData({ shortness_of_breath: option }); // Update formData with shortness_of_breath
+  const handleToggle = (value: boolean, type: string) => {
+    updateFormData({ [type]: value ? "Yes" : "No" });
+    if (type === "chest_pain") setChestPain(value);
+    else if (type === "shortness_of_breath") setShortnessOfBreath(value);
+    else if (type === "dizziness") setDizziness(value);
+    else if (type === "swelling") setSwelling(value);
+    else if (type === "diabetes") setDiabetes(value);
+    else if (type === "irregular_heartbeat") setIrregularHeartbeat(value);
+  };
+
+  const sendDataToBackend = async () => {
+    try {
+      const token = await AsyncStorage.getItem("access_token");
+      if (!token) {
+        console.error("JWT token is missing");
+        return;
+      }
+      console.log(formData);
+
+      const isFormValid = Object.values(formData).every(value => value !== null);
+      if (!isFormValid) {
+        console.log("Some form values are missing!");
+        return;
+      }
+
+      const response = await fetch(`${BACKEND_URL}/assessments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const responseData = await response.json();
+      if (response.ok) {
+        console.log("Form submitted successfully:", responseData);
+        router.push("../(main)/result");
+      } else {
+        console.error("Error submitting form:", responseData);
+      }
+    } catch (error) {
+      console.error("Error:", error);
     }
   };
 
-  useEffect(()=>{
-    console.log(selectedOption1);
-    console.log(selectedOption2);
-    console.log(formData.chest_pain);
-    console.log(formData.shortness_of_breath);
-  })
-
   return (
-    <View style={styles.container}>
-      {/* Progress Bar */}
-      <ProgressBarCustom progress={10 / 12} />
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <View style={styles.container}>
+        <ProgressBarCustom progress={12 / 12} />
+        {[
+          { label: "Have you experienced chest pain?", type: "chest_pain", value: chestPain },
+          { label: "Do you often experience shortness of breath?", type: "shortness_of_breath", value: shortnessOfBreath },
+          { label: "Have you felt dizzy or light-headed in the last month?", type: "dizziness", value: dizziness },
+          { label: "Have you noticed swelling in your legs, feet, or hands?", type: "swelling", value: swelling },
+          { label: "Do you have diabetes?", type: "diabetes", value: diabetes },
+          { label: "Do you often experience irregular heartbeat or palpitations?", type: "irregular_heartbeat", value: irregularHeartbeat }
+        ].map(({ label, type, value }) => (
+          <View key={type} style={styles.questionContainer}>
+            <Text style={styles.title}>{label}</Text>
+            <View style={styles.switchContainer}>
+              <Text style={styles.switchLabel}>{value ? "Yes" : "No"}</Text>
+              <Switch
+                trackColor={{ false: "#d3d3d3", true: "#00A896" }}
+                thumbColor={value ? "#ffffff" : "#ffffff"}
+                ios_backgroundColor="#d3d3d3"
+                onValueChange={(newValue) => handleToggle(newValue, type)}
+                value={value}
+              />
+            </View>
+          </View>
+        ))}
 
-      {/* Chest Pain Question */}
-      <Text style={styles.title}>Have you experienced chest pain?</Text>
-      <View style={styles.genderContainer}>
-        <TouchableOpacity
-          style={[styles.card, selectedOption1 === "Yes" && styles.selectedCard]}
-          onPress={() => handleSelection("Yes", "chest_pain")}
-        >
-          <FontAwesome5 name="thumbs-up" size={24} color="#555" />
-          <Text style={styles.genderText}>Yes</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.card, selectedOption1 === "No" && styles.selectedCard]}
-          onPress={() => handleSelection("No", "chest_pain")}
-        >
-          <FontAwesome5 name="thumbs-down" size={24} color="#555" />
-          <Text style={styles.genderText}>No</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={{ height: 30 }}></View>
-
-      {/* Shortness of Breath Question */}
-      <Text style={styles.title}>Do you often experience shortness of breath?</Text>
-      <View style={styles.genderContainer}>
-        <TouchableOpacity
-          style={[styles.card, selectedOption2 === "Yes" && styles.selectedCard]}
-          onPress={() => handleSelection("Yes", "shortness_of_breath")}
-        >
-          <FontAwesome5 name="thumbs-up" size={24} color="#555" />
-          <Text style={styles.genderText}>Yes</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.card, selectedOption2 === "No" && styles.selectedCard]}
-          onPress={() => handleSelection("No", "shortness_of_breath")}
-        >
-          <FontAwesome5 name="thumbs-down" size={24} color="#555" />
-          <Text style={styles.genderText}>No</Text>
+        <TouchableOpacity style={styles.continueButton} onPress={sendDataToBackend}>
+          <Text style={styles.continueText}>Continue →</Text>
         </TouchableOpacity>
       </View>
-
-      {/* Continue Button */}
-      <TouchableOpacity style={styles.continueButton} onPress={() => router.push("../twoinone2")}>
-        <Text style={styles.continueText}>Continue →</Text>
-      </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: "center", backgroundColor: "#fff", paddingHorizontal: 20, paddingVertical: 40, justifyContent: "space-around" },
-  title: { fontSize: 26, fontWeight: "bold", textAlign: "center", marginVertical: 10 },
-  genderContainer: { flexDirection: "row", justifyContent: "space-between", width: "100%" },
-  card: { width: "45%", backgroundColor: "#f7f7f7", borderRadius: 12, padding: 20, alignItems: "center", borderWidth: 2, borderColor: "transparent" },
-  selectedCard: { borderColor: "#00A896", backgroundColor: "#E0F7F5" },
-  genderText: { fontSize: 18, fontWeight: "bold", marginTop: 10 },
+  scrollContainer: { flexGrow: 1, },
+  container: { flex: 1, alignItems: "center", backgroundColor: "#fff", paddingHorizontal: 20,paddingVertical:30 },
+  title: { fontSize: 20, fontWeight: "bold", textAlign: "center", marginBottom: 10 },
+  questionContainer: { width: "100%", marginVertical: 15, paddingHorizontal: 10 },
+  switchContainer: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 5 },
+  switchLabel: { fontSize: 16, fontWeight: "bold", marginRight: 10 },
   continueButton: { marginTop: 20, backgroundColor: "#0098A5", padding: 15, borderRadius: 30, width: "80%", alignItems: "center" },
   continueText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
 });

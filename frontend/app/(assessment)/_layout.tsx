@@ -15,8 +15,6 @@ export default function MainLayout() {
         <Stack.Screen name="dietary" options={{ headerShown: false }} />
         <Stack.Screen name="stress" options={{ headerShown: false }} />
         <Stack.Screen name="twoinone1" options={{ headerShown: false }} />
-        <Stack.Screen name="twoinone2" options={{ headerShown: false }} />
-        <Stack.Screen name="twoinone3" options={{ headerShown: false }} />
     </Stack>
     </FormDataProvider>
   );

@@ -58,7 +58,7 @@ const TestScoreCard = ({ testResult, testDate }: TestScoreCardProps) => {
           Test taken on: {testDate}
         </Text>
       </View>
-      <Image source={getGif()} style={{ width: 150, height: 200 }} />
+      <Image source={getGif()} style={{ width: 150, height: 150 }} />
     </View>
   );
 };

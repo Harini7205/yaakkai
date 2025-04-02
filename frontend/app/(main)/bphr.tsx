@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import ProgressBarCustom from "../(assessment)/progressbar";
+import {BACKEND_URL} from "../config"; 
 
 const BloodPressureHeartRateScreen = () => {  
   const [systolic, setSystolic] = useState("");
@@ -68,7 +68,7 @@ const BloodPressureHeartRateScreen = () => {
         return;
       }
 
-      const response = await fetch("http://192.168.1.7:5000/update-bp-hr", {
+      const response = await fetch(`${BACKEND_URL}/update-bp-hr`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

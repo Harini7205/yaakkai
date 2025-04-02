@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons'; // For icons
 import signupImage from "@assets/images/signup-image.png";
 import googleLogoImage from "@assets/images/google-logo.png";
 import { useLanguage } from '../config/(lang)/LanguageContext';
+import {BACKEND_URL} from "../config"; 
 
 const Signup: React.FC = () => {
   const { t } = useLanguage();
@@ -24,7 +25,7 @@ const Signup: React.FC = () => {
     }
 
     try {
-      const response = await fetch('http://192.168.1.7:5000/auth/signup', {
+      const response = await fetch(`${BACKEND_URL}/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),

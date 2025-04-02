@@ -17,11 +17,10 @@ def get_youtube_resources():
     search_query = search_queries[random.randint(0, len(search_queries)-1)]  # Randomly select a search query
     print(search_query)
     youtube_url = f"https://www.googleapis.com/youtube/v3/search?part=snippet&q={search_query}&type=video&maxResults=5"
-    
     try:
         response = requests.get(youtube_url)
         data = response.json()
-        
+        print(data)
         videos = [
             {
                 "title": item["snippet"]["title"],
@@ -30,9 +29,8 @@ def get_youtube_resources():
             }
             for item in data.get("items", [])
         ]
-        print(videos)
         return jsonify({"resources": videos})
-    
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

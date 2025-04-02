@@ -1,21 +1,18 @@
-import shap
-import joblib
 import pandas as pd
-import os
 from flask import request, jsonify, Blueprint, send_from_directory
 from app.database.db import db
 from app.models.assessment_results import AssessmentResult
 from app.models.user import User
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime, timezone
+import xgboost as xgb
+import joblib
 
 assessment_routes = Blueprint('assessment_routes', __name__)
 
-# Load the pre-trained model (assuming 'tuned_lightgbm.pkl' is used for prediction)
-model = joblib.load('app/tuned_lgbm_model.pkl')
-
-# Load SHAP explainer for LightGBM model
-explainer = shap.TreeExplainer(model)
+model = xgb.Booster()
+model.load_model('app/cvd_model.json')
+scaler = joblib.load('app/scaler.pkl')
 
 @assessment_routes.route('/assessments', methods=['POST'])
 @jwt_required()
@@ -38,7 +35,7 @@ def create_assessment():
         height=user.height
         weight=user.weight
 
-        gender_map={'Male':0,'Female':1}
+        gender_map={'Male':1,'Female':0}
         gender=gender_map[gender]
         print(gender)
         # Update user table if new data is provided
@@ -68,14 +65,13 @@ def create_assessment():
         sedentary_hours = int(form_data.get('sedentary_hours', 0))
         sleep_hours = int(form_data.get('sleep_hours', 0))
         social_connectedness = form_data.get('social_connectedness', 0)
-
-        # Create a DataFrame for prediction (same as before)
+        
         prediction_data = pd.DataFrame([{
             'Age': age,
             'Gender': gender,
             'Smoking_Status': smoking_status_value,
             'Cigarettes_Per_Day': cigarettes_per_day,
-            'Sedentary_Hour': sedentary_hours,
+            'Sedentary_Hours': sedentary_hours,
             'Hypertension': hypertension_value,
             'Diabetes': diabetes_value,
             'Sleep_Hours': sleep_hours,
@@ -89,23 +85,18 @@ def create_assessment():
             'Swelling': swelling_value,
             'Irregular_Heartbeat': irregular_heartbeat_value
         }])
-        print(prediction_data.to_json())
-
-        # Predict risk level
-        risk_level = int(model.predict(prediction_data)[0])
-
-        # Generate SHAP values
-        shap_values = explainer.shap_values(prediction_data)
-        predicted_class_index = risk_level
-
-        # Generate SHAP force plot
-        shap.initjs()
-        shap_plot_path = 'app/static/shap_force_plot.html'
-        shap_force_plot = shap.force_plot(explainer.expected_value[0], shap_values[0][:, predicted_class_index],
-                        prediction_data.iloc[0], feature_names=prediction_data.columns,
-                        show=False)
-        shap.save_html(shap_plot_path, plot=shap_force_plot)
-        shap_plot_url = f"/static/shap_force_plot.html"
+        print(prediction_data.to_dict())
+        scaled_data = scaler.transform(prediction_data)
+        print(scaled_data)
+        dmatrix_data = xgb.DMatrix(scaled_data)  # Convert DataFrame to DMatrix
+        predictions = model.predict(dmatrix_data)   # Predict risk level
+        print(predictions)
+        if predictions.size == 1:  # Ensure it's a single value
+            risk_level=int(predictions.items())  # Convert single-element array to int
+        else:
+            print(predictions)
+            risk_level = int(predictions.argmax())
+            print(risk_level)
 
         # Map the risk level to a label
         risk_level_map = {0: 'Low', 1: 'Moderate', 2: 'High', 3: 'Very High'}
@@ -134,7 +125,6 @@ def create_assessment():
         return jsonify({
             "message": "Assessment result added successfully", 
             "predicted_risk_level": risk_level_label,
-            "shap_plot_url": shap_plot_url
         }), 201
 
     except Exception as e:

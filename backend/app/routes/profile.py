@@ -1,41 +1,36 @@
-from flask import Blueprint,jsonify,request
+from flask import Blueprint, jsonify, request
 from app.models.user import User
 from app.models.assessment_results import AssessmentResult
 from app.database.db import db
-from flask_jwt_extended import jwt_required,get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
-profile_routes=Blueprint('profile_routes',__name__)
+profile_routes = Blueprint('profile_routes', __name__)
 
 @profile_routes.route('/profile', methods=['GET'])
 @jwt_required()
 def get_profile():
-    user_id = get_jwt_identity()
+    user_email = get_jwt_identity()
+    user = User.query.filter_by(email=user_email).first()
 
-    if not user_id:
-        print("No token found")
-
-    user = User.query.get(int(user_id))
     if not user:
         return jsonify({"message": "User not found"}), 404
     
-    assessments = AssessmentResult.query.filter(AssessmentResult.user_id == user_id).all()
-
+    assessments = AssessmentResult.query.filter_by(user_id=user.id).all()
     num_tests_taken = len(assessments)
     latest_test_result = 'None'
-    if num_tests_taken > 0:
-        latest_assessment = sorted(assessments, key=lambda x: x.created_at, reverse=True)[0]
-        latest_test_result = latest_assessment.prediction
     
-    mapping={0:"Low",1:"Moderate",2:"High"}
-    if latest_test_result!='None':
-        latest_test_result=mapping[int(latest_test_result)]
-
+    if num_tests_taken > 0:
+        latest_assessment = sorted(assessments, key=lambda x: x.test_taken_at, reverse=True)[0]
+        latest_test_result = latest_assessment.risk_level
+    
     return jsonify({
-        "userid": user_id,
+        "userid": user.id,
         "name": user.name,
         "email": user.email,
-        "testsTaken":num_tests_taken,
-        "latestTestResult":latest_test_result
+        "age": user.age,
+        "gender": user.gender,
+        "testsTaken": num_tests_taken,
+        "latestTestResult": latest_test_result
     }), 200
 
 @profile_routes.route('/change-password', methods=['POST'])
@@ -48,8 +43,8 @@ def change_password():
     if not current_password or not new_password:
         return jsonify({"message": "Missing fields"}), 400
 
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
+    user_email = get_jwt_identity()
+    user = User.query.filter_by(email=user_email).first()
 
     if not user or not user.check_password(current_password):
         return jsonify({"message": "Invalid current password"}), 400
@@ -68,12 +63,12 @@ def update_email():
     if not new_email:
         return jsonify({"message": "Missing email"}), 400
 
-    existing_user = User.query.filter(User.email == new_email).first()
+    existing_user = User.query.filter_by(email=new_email).first()
     if existing_user:
         return jsonify({"message": "Email already in use"}), 400
 
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
+    user_email = get_jwt_identity()
+    user = User.query.filter_by(email=user_email).first()
 
     if not user:
         return jsonify({"message": "User not found"}), 404

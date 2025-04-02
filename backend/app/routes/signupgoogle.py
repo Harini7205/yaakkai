@@ -5,12 +5,12 @@ import google.oauth2.id_token
 import google.auth.transport.requests
 from flask import Blueprint,jsonify,request
 import jwt
-
+import os
 signup_google_routes = Blueprint('signup_google_routes', __name__)
 
 # Google OAuth Config
-CLIENT_ID = "371699386242-t86ge7tkcmg07cc13ni7ek6ltab29rbu.apps.googleusercontent.com"
-CLIENT_SECRET = "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"
+CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+CLIENT_SECRET = os.getenv("GOOGLE_SECRET")
 REDIRECT_URI = "https://ad71-2401-4900-1ce0-7d42-c962-ff23-742f-aab1.ngrok-free.app/auth/google/callback"
 
 @signup_google_routes.route('/auth/google')

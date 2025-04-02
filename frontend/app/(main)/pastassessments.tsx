@@ -1,29 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
-import BottomNav from './bottomNav';
+import { BACKEND_URL } from '../config';
+import Linechart from './linechart';
+import BottomNavBar from './bottomnavigationbar';
 
 const PastAssessment = () => {
-  const router = useRouter();
-  const [assessments, setAssessments] = useState([{"id":null,"created_at":null,"prediction":''}]);
+  interface Assessment {
+    id: number;
+    created_at: string;
+    prediction: '0' | '1' | '2' | '3';
+  }
+
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [error, setError] = useState('');
-  const mapping:{[key:string]:string}={'0':"Low","1":"Moderate","2":"High"};
 
   useEffect(() => {
-    // Function to fetch past assessments
     const fetchAssessments = async () => {
       try {
-        // Get the access token from AsyncStorage
         const token = await AsyncStorage.getItem('access_token');
-        console.log(token);
         if (!token) {
-          console.log('No access token found');
+          setError('No access token found');
           return;
         }
 
-        // Fetch assessments from the backend
-        const response = await fetch('http://127.0.0.1:5000/assessments', {
+        const response = await fetch(`${BACKEND_URL}/assessments`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -36,10 +37,9 @@ const PastAssessment = () => {
         }
 
         const data = await response.json();
-        setAssessments(data); // Assuming the response returns an array of assessments
+        setAssessments(data);
       } catch (error) {
-        setError('Error fetching assessments: ' + error);
-        console.error('Error fetching assessments:', error);
+        setError('Error fetching assessments: ' + (error instanceof Error ? error.message : 'Unknown error'));
       }
     };
 
@@ -49,7 +49,7 @@ const PastAssessment = () => {
   if (error) {
     return (
       <View style={styles.container}>
-        <Text>{error}</Text>
+        <Text style={styles.errorText}>{error}</Text>
       </View>
     );
   }
@@ -57,65 +57,65 @@ const PastAssessment = () => {
   if (!assessments.length) {
     return (
       <View style={styles.container}>
-        <Text>Loading past assessments...</Text>
+        <Text style={styles.noAssessmentText}>
+          Take an assessment to view your risk level of CVD. Click the plus icon in the nav bar to take a new assessment.
+        </Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.outer}>
     <View style={styles.container}>
       <Text style={styles.heading}>Past Assessments</Text>
-      {assessments.map((assessment, index) => (
-        <View key={index} style={styles.assessmentItem}>
-          <Text style={styles.assessmentText}>Assessment {assessment.id}</Text>
-          <Text style={styles.assessmentText}>Date: {assessment.created_at}</Text>
-          <Text style={styles.assessmentText}>Prediction: {mapping[assessment.prediction]}</Text>
-        </View>
-      ))}
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backButtonText}>Back</Text>
-      </TouchableOpacity>
-    </View>
-    <BottomNav/>
+      <FlatList
+        data={assessments}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={({ item }: { item: Assessment }) => (
+          <View style={styles.assessmentItem}>
+            <Text style={styles.assessmentText}>Date: {item.created_at || "Unknown date"}</Text>
+            <Text style={styles.assessmentText}>Risk Level: {item.prediction || "Unknown"}</Text>
+          </View>
+        )}
+      />
+      <Text style={{textAlign:"center",fontSize:22,fontWeight:"bold", marginTop:10}}>Past Risk Trends</Text>
+      <Linechart />
+      <BottomNavBar />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  outer:{
-    flex:1,
-    width:'100%',
-  },
   container: {
-    padding: 20,
+    flex: 1,
+    paddingHorizontal: 40,
+    backgroundColor: '#fff',
+    paddingVertical:40,
+    paddingBottom:60,
   },
   heading: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign:'center',
-    marginTop:20,
+    marginBottom: 15,
+    textAlign: 'center',
   },
   assessmentItem: {
-    marginBottom: 15,
-    padding: 10,
+    padding: 15,
     borderRadius: 8,
     backgroundColor: '#f4f4f4',
+    marginBottom: 10,
   },
   assessmentText: {
     fontSize: 16,
   },
-  backButton: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: '#0098A5',
-    borderRadius: 5,
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
   },
-  backButtonText: {
-    color: 'white',
+  noAssessmentText: {
     fontSize: 16,
     textAlign: 'center',
+    color: '#555',
+    marginTop: 20,
   },
 });
 

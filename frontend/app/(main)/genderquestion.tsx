@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from "reac
 import { FontAwesome5 } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {BACKEND_URL} from "../config";
 
 const GenderSelectionScreen = () => {
   const [selectedGender, setSelectedGender] = useState<"Male" | "Female" | "Other" | null>(null);
@@ -80,7 +81,7 @@ const sendToBackend = async () => {
       return;
     }
 
-    const response = await fetch("http://192.168.1.7:5000/gender-bmi", {
+    const response = await fetch(`${BACKEND_URL}/gender-bmi`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

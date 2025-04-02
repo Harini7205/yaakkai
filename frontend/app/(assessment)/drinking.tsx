@@ -57,12 +57,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingHorizontal: 40,
-    paddingTop: 30,
     alignItems: 'center',
     justifyContent:"center"
   },
   questionText: {
-    marginVertical: 20,
     fontSize: 30,
     fontWeight: 'bold',
     textAlign: 'center',
@@ -71,7 +69,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 300,
     resizeMode: 'contain',
-    marginVertical: 10,
   },
   ratingContainer: {
     flexDirection: 'row',

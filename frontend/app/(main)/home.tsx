@@ -5,6 +5,7 @@ import TestScoreCard from "./testscorecard";
 import HealthCards from "./healthstatus";
 import BottomNavBar from "./bottomnavigationbar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {BACKEND_URL} from "../config";
 
 const HomePage = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -35,7 +36,7 @@ const HomePage = () => {
         Alert.alert("Error", "You are not logged in.");
         return;
       }
-      const response = await fetch("http://192.168.1.7:5000/latest-test-result",{
+      const response = await fetch(`${BACKEND_URL}/latest-test-result`,{
         method:'GET',
         headers:{
           Authorization: `Bearer ${token}`,
@@ -73,7 +74,7 @@ const HomePage = () => {
 
   const fetchYouTubeResources = async () => {
     try {
-      const response = await fetch("http://192.168.1.7:5000/youtube-resources");
+      const response = await fetch(`${BACKEND_URL}/youtube-resources`);
       const data = await response.json();
       setYoutubeResources(data.resources || []);
     } catch (error) {
